@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --ink: #1c1c1a;
+  --muted: #6b6b66;
+  --line: #e6e5e0;
+  --accent: #4f46e5;
+  --accent-ink: #ffffff;
+  --danger: #c2410c;
+  --soft: #f0efeb;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141413;
+    --panel: #1c1c1b;
+    --ink: #ecebe6;
+    --muted: #9a9993;
+    --line: #2e2e2b;
+    --accent: #818cf8;
+    --accent-ink: #111111;
+    --danger: #fb923c;
+    --soft: #252523;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger: var(--danger);
+  --color-soft: var(--soft);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition active:scale-[.98] disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-accent-ink hover:opacity-90;
+}
+@utility btn-ghost {
+  @apply btn text-ink hover:bg-soft;
+}
+@utility btn-outline {
+  @apply btn border border-line bg-panel hover:bg-soft;
+}
+@utility input {
+  @apply w-full rounded-lg border border-line bg-panel px-3 py-2 text-base outline-none focus:border-accent md:text-sm;
+}
+@utility card {
+  @apply rounded-xl border border-line bg-panel;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full bg-soft px-2 py-0.5 text-xs text-muted;
+}
+
+.prose-md h1 { @apply mt-4 mb-2 text-xl font-semibold; }
+.prose-md h2 { @apply mt-4 mb-2 text-lg font-semibold; }
+.prose-md h3 { @apply mt-3 mb-1 font-semibold; }
+.prose-md p { @apply my-2 leading-relaxed; }
+.prose-md ul { @apply my-2 list-disc pl-5; }
+.prose-md ol { @apply my-2 list-decimal pl-5; }
+.prose-md li { @apply my-0.5; }
+.prose-md a { @apply text-accent underline; }
+.prose-md code { @apply rounded bg-soft px-1 font-mono text-[.9em]; }
+.prose-md pre { @apply my-2 overflow-x-auto rounded-lg bg-soft p-3; }
+.prose-md blockquote { @apply my-2 border-l-2 border-line pl-3 text-muted; }
+.prose-md table { @apply my-2 w-full border-collapse text-sm; }
+.prose-md th, .prose-md td { @apply border border-line px-2 py-1 text-left; }
+.prose-md input[type="checkbox"] { @apply mr-1; }
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
