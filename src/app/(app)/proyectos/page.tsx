@@ -1,0 +1,59 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { insert, useProjects, useTasks } from "@/lib/db";
+import { Empty, PageHeader } from "@/components/ui";
+import { ProjectDot } from "@/components/pickers";
+import { COLORS } from "@/lib/types";
+
+
+export default function ProyectosPage() {
+  const { data: projects } = useProjects();
+  const { data: tasks } = useTasks();
+  const [name, setName] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const shown = projects.filter((p) => showArchived || p.status === "active");
+
+  return (
+    <div className="max-w-3xl">
+      <PageHeader title="Proyectos" />
+      <form
+        className="mb-4 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!name.trim()) return;
+          insert("projects", { name: name.trim(), color: COLORS[projects.length % COLORS.length] });
+          setName("");
+        }}
+      >
+        <input className="input" placeholder="Nuevo proyecto" value={name} onChange={(e) => setName(e.target.value)} />
+        <button className="btn-primary shrink-0">
+          <Plus className="size-4" /> Crear
+        </button>
+      </form>
+      {shown.length === 0 ? (
+        <Empty>Sin proyectos.</Empty>
+      ) : (
+        <ul className="card divide-y divide-line">
+          {shown.map((p) => {
+            const open = tasks.filter((t) => t.project_id === p.id && !t.parent_id && t.status !== "done" && t.status !== "inbox").length;
+            return (
+              <li key={p.id}>
+                <Link href={`/proyectos/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-soft">
+                  <ProjectDot color={p.color} className="size-3" />
+                  <span className={`flex-1 ${p.status === "archived" ? "text-muted" : ""}`}>{p.name}</span>
+                  {p.status === "archived" ? <span className="chip">archivado</span> : <span className="text-xs text-muted">{open} abiertas</span>}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <label className="mt-3 flex items-center gap-2 text-sm text-muted">
+        <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} /> Ver archivados
+      </label>
+    </div>
+  );
+}
