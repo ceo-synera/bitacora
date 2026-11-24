@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, BellOff, FileUp, LogOut, Trash2, Send } from "lucide-react";
+import { Bell, BellOff, FileUp, LogOut, Trash2, Send, Users } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { insert, remove, update, usePeople } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
 import { currentSubscription, disablePush, enablePush, isStandalone, pushSupported, sendTestPush } from "@/lib/push";
 import { toast } from "@/lib/toast";
@@ -17,7 +16,11 @@ export default function AjustesPage() {
     <div className="max-w-2xl">
       <PageHeader title="Ajustes" />
       <Notifications />
-      <People />
+      <Section title="Personas">
+        <Link href="/personas" className="btn-outline">
+          <Users className="size-4" /> Ver y editar personas
+        </Link>
+      </Section>
       <Section title="Importar">
         <Link href="/ajustes/importar" className="btn-outline">
           <FileUp className="size-4" /> Importar tareas desde CSV o Excel
@@ -101,48 +104,6 @@ function Notifications() {
             ))}
           </ul>
         )}
-      </div>
-    </Section>
-  );
-}
-
-function People() {
-  const { data: people } = usePeople();
-  const [name, setName] = useState("");
-  const [team, setTeam] = useState("");
-  return (
-    <Section title="Personas" count={people.length}>
-      <div className="card p-2">
-        <ul className="divide-y divide-line">
-          {people.map((p) => (
-            <li key={p.id} className="flex items-center gap-2 px-2 py-1.5">
-              <input className="min-w-0 flex-1 bg-transparent py-1 text-sm outline-none" defaultValue={p.name} onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && update("people", p.id, { name: e.target.value.trim() })} />
-              <input
-                className="w-28 bg-transparent py-1 text-sm text-muted outline-none"
-                placeholder="Equipo"
-                defaultValue={p.team ?? ""}
-                onBlur={(e) => e.target.value !== (p.team ?? "") && update("people", p.id, { team: e.target.value || null })}
-              />
-              <button className="p-1 text-muted hover:text-danger" onClick={() => confirm(`¿Borrar a ${p.name}?`) && remove("people", p.id)} aria-label="Borrar">
-                <Trash2 className="size-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-        <form
-          className="mt-1 flex gap-2 p-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!name.trim()) return;
-            insert("people", { name: name.trim(), team: team.trim() || null });
-            setName("");
-            setTeam("");
-          }}
-        >
-          <input className="input" placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="input w-32" placeholder="Equipo" value={team} onChange={(e) => setTeam(e.target.value)} />
-          <button className="btn-primary shrink-0">Agregar</button>
-        </form>
       </div>
     </Section>
   );
