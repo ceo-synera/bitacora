@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { insert } from "@/lib/db";
 import type { Task } from "@/lib/types";
+import { newTask } from "./create-store";
 
 /** Agrega una tarea en una línea, con los valores por defecto que le pases (proyecto, fecha, reunión…). */
 export function QuickAdd({
@@ -34,6 +35,18 @@ export function QuickAdd({
         autoFocus={autoFocus}
         onChange={(e) => setV(e.target.value)}
       />
+      <button
+        type="button"
+        className="-mr-1 shrink-0 rounded-md p-1.5 text-muted hover:bg-soft hover:text-ink"
+        title="Con todos los detalles"
+        aria-label="Crear con todos los detalles"
+        onClick={() => {
+          newTask({ status: "todo", ...defaults, title: v.trim() });
+          setV("");
+        }}
+      >
+        <SlidersHorizontal className="size-4" />
+      </button>
     </form>
   );
 }

@@ -3,8 +3,9 @@
 import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { CheckSquare, FileText, FolderKanban, NotebookPen, Users2, ArrowRight } from "lucide-react";
-import { useFiles, useMeetings, useNotes, useProjects, useTasks } from "@/lib/db";
+import { CheckSquare, FileText, FolderKanban, NotebookPen, Users2, ArrowRight, Contact, Plus } from "lucide-react";
+import { useFiles, useMeetings, useNotes, usePeople, useProjects, useTasks } from "@/lib/db";
+import { openCreate } from "./create-store";
 import { longDate } from "@/lib/dates";
 import { openTask } from "./open-task";
 
@@ -45,6 +46,7 @@ export function CommandPalette() {
   const { data: meetings } = useMeetings();
   const { data: files } = useFiles();
   const { data: projects } = useProjects();
+  const { data: people } = usePeople();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -87,6 +89,19 @@ export function CommandPalette() {
       />
       <Command.List className={`max-h-[70dvh] overflow-y-auto p-2 ${heading}`}>
         <Command.Empty className="px-3 py-6 text-center text-sm text-muted">Nada por acá.</Command.Empty>
+        <Command.Group heading="Crear">
+          {(
+            [
+              ["Nueva tarea", () => openCreate({ kind: "task" })],
+              ["Nueva persona", () => openCreate({ kind: "person" })],
+              ["Nuevo proyecto", () => openCreate({ kind: "project" })],
+            ] as const
+          ).map(([label, run]) => (
+            <Command.Item key={label} value={`crear ${label}`} onSelect={() => (close(), run())} className={item}>
+              <Plus className="size-4 text-muted" /> {label}
+            </Command.Item>
+          ))}
+        </Command.Group>
         <Command.Group heading="Ir a">
           {[
             ["Hoy", "/"],
@@ -96,6 +111,7 @@ export function CommandPalette() {
             ["Archivos", "/archivos"],
             ["Notas", "/notas"],
             ["Proyectos", "/proyectos"],
+            ["Personas", "/personas"],
             ["Ajustes", "/ajustes"],
           ].map(([label, href]) => (
             <Command.Item key={href} value={`ir ${label}`} onSelect={() => go(href)} className={item}>
@@ -109,6 +125,14 @@ export function CommandPalette() {
           {projects.map((p) => (
             <Command.Item key={p.id} value={`proyecto ${p.id}`} keywords={[p.name]} onSelect={() => go(`/proyectos/${p.id}`)} className={item}>
               <FolderKanban className="size-4 text-muted" /> {p.name}
+            </Command.Item>
+          ))}
+        </Command.Group>
+        <Command.Group heading="Personas">
+          {people.map((p) => (
+            <Command.Item key={p.id} value={`persona ${p.id}`} keywords={[p.name, p.role ?? "", p.team ?? "", p.email ?? ""]} onSelect={() => go(`/personas/${p.id}`)} className={item}>
+              <Contact className="size-4 text-muted" /> {p.name}
+              {p.role && <span className="truncate text-xs text-muted">{p.role}</span>}
             </Command.Item>
           ))}
         </Command.Group>

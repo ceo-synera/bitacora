@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 30, buster: "v1" }}
+      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 30, buster: "v2" }}
     >
       {children}
       <Toaster />

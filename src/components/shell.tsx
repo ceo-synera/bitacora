@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Sun,
   Inbox,
@@ -16,15 +16,16 @@ import {
   Menu,
   CloudOff,
   FolderKanban,
+  Contact,
 } from "lucide-react";
-import { useFiles, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
-import { capture } from "@/lib/actions";
-import { toast } from "@/lib/toast";
+import { useFiles, useMembers, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
 import { Logo } from "./logo";
 import { ProjectDot } from "./pickers";
 import { TaskSheet } from "./task-sheet";
 import { CommandPalette, openPalette } from "./command-palette";
 import { Dialog } from "./ui";
+import { CreateDialogs } from "./create-dialogs";
+import { openCreate } from "./create-store";
 
 const NAV = [
   { href: "/", label: "Hoy", icon: Sun },
@@ -34,6 +35,7 @@ const NAV = [
   { href: "/archivos", label: "Archivos", icon: FolderOpen },
   { href: "/notas", label: "Notas", icon: NotebookPen },
   { href: "/proyectos", label: "Proyectos", icon: FolderKanban },
+  { href: "/personas", label: "Personas", icon: Contact },
 ];
 
 function useOnline() {
@@ -54,6 +56,18 @@ function useOnline() {
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // Tecla "c" (fuera de un campo de texto): abrir Crear.
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey && !/INPUT|TEXTAREA|SELECT/.test(el.tagName) && !el.isContentEditable) {
+        e.preventDefault();
+        openCreate({ kind: "menu" });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const path = usePathname();
   const { data: tasks } = useTasks();
   const { data: projects } = useProjects();
@@ -62,10 +76,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useMeetings();
   useNotes();
   useFiles();
+  useMembers();
   const inboxCount = tasks.filter((t) => t.status === "inbox").length;
   const online = useOnline();
   const pending = usePendingCount();
-  const [captureOpen, setCaptureOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
@@ -140,9 +154,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {/* Botón de captura */}
       <button
-        onClick={() => setCaptureOpen(true)}
+        onClick={() => openCreate({ kind: "menu" })}
         className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-accent text-accent-ink shadow-lg md:bottom-6 md:right-6"
-        aria-label="Capturar"
+        aria-label="Crear"
       >
         <Plus className="size-6" />
       </button>
@@ -186,31 +200,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </Dialog>
 
-      <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
+      <CreateDialogs />
       <TaskSheet />
       <CommandPalette />
     </div>
-  );
-}
-
-function CaptureDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [v, setV] = useState("");
-  return (
-    <Dialog open={open} onClose={onClose} title="Capturar a la Bandeja">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (capture(v)) {
-            toast("Guardado en la Bandeja");
-            setV("");
-            onClose();
-          }
-        }}
-        className="space-y-3"
-      >
-        <input className="input" autoFocus placeholder="¿Qué hay que hacer?" value={v} onChange={(e) => setV(e.target.value)} />
-        <button className="btn-primary w-full">Guardar</button>
-      </form>
-    </Dialog>
   );
 }
