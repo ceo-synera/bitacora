@@ -1,6 +1,6 @@
 "use client";
 
-import { insert, snapshot } from "./db";
+import { insert, ready, snapshot } from "./db";
 import { classifyMeetingPdf, ROLE_LABEL } from "./meeting-pdf";
 import { uploadFile } from "./files";
 import type { Meeting } from "./types";
@@ -23,6 +23,7 @@ export function meetingFor(date: string, projectId: string | null = culebroId())
  * Los que no reconoce se devuelven en `skipped`.
  */
 export async function uploadMeetingPdfs(files: File[], forceMeeting?: Meeting) {
+  await Promise.all([ready("projects"), ready("meetings"), ready("files")]);
   const done: string[] = [];
   const skipped: string[] = [];
   for (const file of files) {

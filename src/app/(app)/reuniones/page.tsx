@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Plus, FileText, Presentation, ScrollText, ChevronRight } from "lucide-react";
-import { useFiles, useMeetings, useProjects, useTasks } from "@/lib/db";
+import { ready, useFiles, useMeetings, useProjects, useTasks } from "@/lib/db";
 import { addDaysISO, isMonday, longDate, mondayOf, today } from "@/lib/dates";
 import { culebroId, meetingFor, uploadMeetingPdfs } from "@/lib/meetings";
 import { toast } from "@/lib/toast";
@@ -33,7 +33,8 @@ export default function ReunionesPage() {
     setBusy(false);
   }
 
-  function newMeeting() {
+  async function newMeeting() {
+    await Promise.all([ready("projects"), ready("meetings")]);
     const d = today();
     const date = isMonday(d) ? d : addDaysISO(mondayOf(d), 7);
     const m = meetingFor(date, culebroId());
@@ -73,7 +74,7 @@ export default function ReunionesPage() {
               <li key={m.id}>
                 <Link href={`/reuniones/${m.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-soft">
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium capitalize">{longDate(m.date)}</div>
+                    <div className="text-sm font-medium">{longDate(m.date)}</div>
                     <div className="flex flex-wrap items-center gap-x-3 text-xs text-muted">
                       <span>{m.title || "Reunión"}</span>
                       {project && (

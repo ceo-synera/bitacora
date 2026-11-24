@@ -224,6 +224,15 @@ export function remove(table: TableName, rowId: string) {
   enqueue({ id: newId(), table, kind: "delete", rowId });
 }
 
+/** Espera a que una tabla esté cargada (del caché o de la red) y la devuelve. */
+export async function ready<T extends TableName>(table: T): Promise<Tables[T][]> {
+  try {
+    return await queryClient.ensureQueryData({ queryKey: [table], queryFn: () => fetchTable(table) });
+  } catch {
+    return snapshot(table); // sin red y sin caché: lo que haya
+  }
+}
+
 /** Lee una tabla del caché sin suscribirse (para usar dentro de acciones). */
 export function snapshot<T extends TableName>(table: T): Tables[T][] {
   return (queryClient.getQueryData<Tables[T][]>([table]) ?? []) as Tables[T][];
