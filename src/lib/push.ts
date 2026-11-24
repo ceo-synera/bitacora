@@ -67,5 +67,5 @@ export async function sendTestPush() {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error ?? `Error ${res.status}`);
-  return body as { sent: number };
+  return body as { sent: number; errors: string[] };
 }

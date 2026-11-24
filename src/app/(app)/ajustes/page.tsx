@@ -80,7 +80,13 @@ function Notifications() {
                 <Bell className="size-4" /> Activar en este dispositivo
               </button>
             )}
-            <button className="btn-outline" disabled={busy || devices.length === 0} onClick={() => run(async () => toast(`Enviado a ${(await sendTestPush()).sent} dispositivo(s)`))}>
+            <button className="btn-outline" disabled={busy || devices.length === 0} onClick={() =>
+                run(async () => {
+                  const r = await sendTestPush();
+                  if (r.errors.length) toast(`No salió: ${r.errors.join(" · ")}`, "error");
+                  if (r.sent) toast(`Enviado a ${r.sent} dispositivo(s). Si no lo ves, revisá los permisos de notificaciones del sistema.`);
+                })
+              }>
               <Send className="size-4" /> Probar
             </button>
           </div>
