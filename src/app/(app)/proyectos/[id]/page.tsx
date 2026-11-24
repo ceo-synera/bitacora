@@ -100,7 +100,7 @@ function ProjectMeetings({ projectId }: { projectId: string }) {
       {ms.map((m) => (
         <li key={m.id}>
           <Link href={`/reuniones/${m.id}`} className="block px-4 py-3 hover:bg-soft">
-            <div className="text-sm font-medium capitalize">{longDate(m.date)}</div>
+            <div className="text-sm font-medium">{longDate(m.date)}</div>
             <div className="text-xs text-muted">{m.title}</div>
           </Link>
         </li>

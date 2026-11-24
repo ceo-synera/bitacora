@@ -35,7 +35,7 @@ export default function HoyPage() {
   return (
     <div>
       <div className="mb-5">
-        <p className="text-sm capitalize text-muted">{longDate(d)}</p>
+        <p className="text-sm text-muted">{longDate(d)}</p>
         <h1 className="text-2xl font-semibold tracking-tight">Hoy</h1>
       </div>
 

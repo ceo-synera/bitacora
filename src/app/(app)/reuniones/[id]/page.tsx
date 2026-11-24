@@ -56,7 +56,7 @@ export default function MeetingPage() {
         ← Reuniones
       </Link>
       <div className="mb-4 mt-1">
-        <p className="text-sm capitalize text-muted">{longDate(m.date)}</p>
+        <p className="text-sm text-muted">{longDate(m.date)}</p>
         <input
           className="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none"
           defaultValue={m.title}

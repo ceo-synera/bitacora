@@ -37,8 +37,10 @@ export function humanDate(date: string, ref: string = today()): string {
   return format(parseISO(date), sameYear ? "EEE d MMM" : "d MMM yyyy", { locale: es });
 }
 
+/** "Martes 24 de noviembre" */
 export function longDate(date: string): string {
-  return format(parseISO(date), "EEEE d 'de' MMMM", { locale: es });
+  const s = format(parseISO(date), "EEEE d 'de' MMMM", { locale: es });
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function shortTime(time: string | null): string {
