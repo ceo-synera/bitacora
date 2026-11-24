@@ -34,7 +34,7 @@ export default function ArchivosPage() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Archivos">
-        <AddLinkButton meta={{ project_id: project }} />
+        <AddLinkButton meta={{ project_id: project }} defaultOpen={typeof window !== "undefined" && new URLSearchParams(window.location.search).has("nuevo")} />
       </PageHeader>
       <div className="mb-3">
         <ProjectSelect value={project} onChange={setProject} emptyLabel="Todos los proyectos" includeArchived className="input w-auto py-1.5 text-sm" />

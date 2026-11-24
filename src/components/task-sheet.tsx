@@ -4,12 +4,12 @@ import { Trash2, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { insert, remove, update, useMeetings, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
-import { RECURRENCE_PRESETS } from "@/lib/recurrence";
 import { longDate } from "@/lib/dates";
-import { PRIORITY_LABEL, STATUS_LABEL, type Priority, type Status, type Task } from "@/lib/types";
+import type { Task } from "@/lib/types";
 import { Dialog } from "./ui";
 import { openTask, useOpenTask } from "./open-task";
-import { PersonSelect, ProjectSelect } from "./pickers";
+import { TaskFields } from "./task-fields";
+import { Attachments } from "./attachments";
 import { Checkbox } from "./task-row";
 import { MarkdownField } from "./markdown";
 
@@ -47,58 +47,7 @@ function TaskEditor({ task }: { task: Task }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-        <Field label="Estado">
-          <select className="input" value={task.status} onChange={(e) => set({ status: e.target.value as Status, done_at: e.target.value === "done" ? new Date().toISOString() : null })}>
-            {Object.entries(STATUS_LABEL).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Prioridad">
-          <select className="input" value={task.priority} onChange={(e) => set({ priority: e.target.value as Priority })}>
-            {Object.entries(PRIORITY_LABEL).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Proyecto">
-          <ProjectSelect value={task.project_id} onChange={(v) => set({ project_id: v })} />
-        </Field>
-        <Field label="Responsable">
-          <PersonSelect value={task.assignee_id} onChange={(v) => set({ assignee_id: v })} />
-        </Field>
-        <Field label="Fecha">
-          <input className="input" type="date" value={task.due_date ?? ""} onChange={(e) => set({ due_date: e.target.value || null, reminded_at: null })} />
-        </Field>
-        <Field label="Hora">
-          <input
-            className="input"
-            type="time"
-            value={task.due_time?.slice(0, 5) ?? ""}
-            onChange={(e) => set({ due_time: e.target.value || null, reminded_at: null })}
-          />
-        </Field>
-        <Field label="Repetir" className="col-span-2 md:col-span-1">
-          <select className="input" value={task.recurrence ?? ""} onChange={(e) => set({ recurrence: e.target.value || null })}>
-            {RECURRENCE_PRESETS.map((p) => (
-              <option key={p.label} value={p.value ?? ""}>
-                {p.label}
-              </option>
-            ))}
-            {task.recurrence && !RECURRENCE_PRESETS.some((p) => p.value === task.recurrence) && (
-              <option value={task.recurrence}>{task.recurrence}</option>
-            )}
-          </select>
-        </Field>
-      </div>
-      {task.recurrence && !task.due_date && (
-        <p className="text-xs text-danger">Para que se repita, ponele una fecha.</p>
-      )}
+      <TaskFields value={task} onChange={set} />
       {meeting && <p className="text-xs text-muted">Salió de la reunión del {longDate(meeting.date)}.</p>}
 
       <div>
@@ -112,7 +61,12 @@ function TaskEditor({ task }: { task: Task }) {
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-medium text-muted">Notas</div>
+        <div className="mb-1 text-xs font-medium text-muted">Links y archivos</div>
+        <Attachments meta={{ task_id: task.id, project_id: task.project_id }} filter={(f) => f.task_id === task.id} />
+      </div>
+
+      <div>
+        <div className="mb-1 text-xs font-medium text-muted">Detalles</div>
         <MarkdownField value={task.notes_md} onChange={(v) => set({ notes_md: v })} placeholder="Detalles, links, contexto…" rows={4} />
       </div>
 
@@ -133,15 +87,6 @@ function TaskEditor({ task }: { task: Task }) {
         </button>
       </div>
     </div>
-  );
-}
-
-function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <label className={`block space-y-1 ${className}`}>
-      <span className="text-xs text-muted">{label}</span>
-      {children}
-    </label>
   );
 }
 

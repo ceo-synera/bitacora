@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Clock, Repeat, User, ListChecks, ArrowUp } from "lucide-react";
-import { usePeople, useProjects, useTasks } from "@/lib/db";
+import { Check, Clock, Repeat, User, ListChecks, ArrowUp, Paperclip } from "lucide-react";
+import { useFiles, usePeople, useProjects, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
 import { humanDate, shortTime, today } from "@/lib/dates";
 import type { Task } from "@/lib/types";
@@ -39,6 +39,8 @@ export function TaskRow({
   const { data: projects } = useProjects();
   const { data: people } = usePeople();
   const { data: tasks } = useTasks();
+  const { data: files } = useFiles();
+  const nFiles = files.filter((f) => f.task_id === task.id).length;
   const project = projects.find((p) => p.id === task.project_id);
   const person = people.find((p) => p.id === task.assignee_id);
   const subs = tasks.filter((t) => t.parent_id === task.id);
@@ -90,6 +92,13 @@ export function TaskRow({
           )}
           {task.status === "waiting" && <span className="chip">esperando</span>}
           {task.status === "doing" && <span className="chip">en curso</span>}
+          {nFiles > 0 && (
+            <span className="inline-flex items-center gap-0.5">
+              <Paperclip className="size-3" />
+              {nFiles}
+            </span>
+          )}
+          {task.notes_md && <span className="max-w-60 truncate">{task.notes_md.split("\n")[0]}</span>}
           {subs.length > 0 && (
             <span className="inline-flex items-center gap-1">
               <ListChecks className="size-3" />
