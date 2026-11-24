@@ -45,6 +45,7 @@ const ORDER: Record<TableName, { column: string; ascending: boolean }> = {
   meetings: { column: "date", ascending: false },
   notes: { column: "updated_at", ascending: false },
   files: { column: "created_at", ascending: false },
+  project_members: { column: "created_at", ascending: true },
 };
 
 // ---------- outbox ----------
@@ -167,6 +168,7 @@ export const useTasks = () => useTable("tasks");
 export const useMeetings = () => useTable("meetings");
 export const useNotes = () => useTable("notes");
 export const useFiles = () => useTable("files");
+export const useMembers = () => useTable("project_members");
 
 // ---------- escritura ----------
 
@@ -174,8 +176,9 @@ const now = () => new Date().toISOString();
 const newId = () => crypto.randomUUID();
 
 const DEFAULTS: { [T in TableName]: () => Omit<Tables[T], "id"> } = {
-  projects: () => ({ name: "", color: "#6366f1", status: "active", created_at: now() }),
-  people: () => ({ name: "", email: null, team: null, created_at: now() }),
+  projects: () => ({ name: "", color: "#6366f1", status: "active", description_md: "", created_at: now() }),
+  people: () => ({ name: "", email: null, team: null, role: null, phone: null, notes_md: "", created_at: now() }),
+  project_members: () => ({ project_id: "", person_id: "", role: null, created_at: now() }),
   tasks: () => ({
     project_id: null,
     meeting_id: null,
@@ -198,6 +201,7 @@ const DEFAULTS: { [T in TableName]: () => Omit<Tables[T], "id"> } = {
   files: () => ({
     project_id: null,
     meeting_id: null,
+    task_id: null,
     name: "",
     kind: "link",
     role: null,

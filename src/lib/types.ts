@@ -7,6 +7,7 @@ export type Project = {
   name: string;
   color: string;
   status: "active" | "archived";
+  description_md: string;
   created_at: string;
 };
 
@@ -16,6 +17,18 @@ export type Person = {
   name: string;
   email: string | null;
   team: string | null;
+  role: string | null;
+  phone: string | null;
+  notes_md: string;
+  created_at: string;
+};
+
+export type ProjectMember = {
+  id: string;
+  owner_id?: string;
+  project_id: string;
+  person_id: string;
+  role: string | null;
   created_at: string;
 };
 
@@ -67,6 +80,7 @@ export type FileRow = {
   owner_id?: string;
   project_id: string | null;
   meeting_id: string | null;
+  task_id: string | null;
   name: string;
   kind: "upload" | "link";
   role: "agenda" | "presentation" | "minutes" | null;
@@ -84,6 +98,7 @@ export type Tables = {
   meetings: Meeting;
   notes: Note;
   files: FileRow;
+  project_members: ProjectMember;
 };
 
 export type TableName = keyof Tables;

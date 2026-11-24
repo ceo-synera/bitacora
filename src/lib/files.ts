@@ -14,7 +14,7 @@ const safe = (name: string) =>
 
 export async function uploadFile(
   file: File,
-  meta: { project_id?: string | null; meeting_id?: string | null; role?: FileRow["role"] } = {},
+  meta: { project_id?: string | null; meeting_id?: string | null; task_id?: string | null; role?: FileRow["role"] } = {},
 ): Promise<FileRow> {
   if (!navigator.onLine) throw new Error("Para subir archivos hace falta conexión.");
   const { data } = await supabase.auth.getSession();
@@ -36,11 +36,12 @@ export async function uploadFile(
     size_bytes: file.size,
     project_id: meta.project_id ?? null,
     meeting_id: meta.meeting_id ?? null,
+    task_id: meta.task_id ?? null,
     role: meta.role ?? null,
   });
 }
 
-export function addLink(url: string, name: string, meta: { project_id?: string | null; meeting_id?: string | null } = {}) {
+export function addLink(url: string, name: string, meta: { project_id?: string | null; meeting_id?: string | null; task_id?: string | null } = {}) {
   return insert("files", {
     kind: "link",
     url,
@@ -48,7 +49,21 @@ export function addLink(url: string, name: string, meta: { project_id?: string |
     mime: null,
     project_id: meta.project_id ?? null,
     meeting_id: meta.meeting_id ?? null,
+    task_id: meta.task_id ?? null,
   });
+}
+
+/** Normaliza lo que se pegue como link (le agrega https:// si falta). Devuelve null si no parece un link. */
+export function normalizeUrl(raw: string): string | null {
+  let u = raw.trim();
+  if (!u) return null;
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  try {
+    const parsed = new URL(u);
+    return parsed.hostname.includes(".") ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteFile(f: FileRow) {
