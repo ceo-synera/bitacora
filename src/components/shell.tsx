@@ -17,7 +17,7 @@ import {
   CloudOff,
   FolderKanban,
 } from "lucide-react";
-import { usePendingCount, useProjects, useTasks } from "@/lib/db";
+import { useFiles, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
 import { capture } from "@/lib/actions";
 import { toast } from "@/lib/toast";
 import { Logo } from "./logo";
@@ -57,6 +57,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { data: tasks } = useTasks();
   const { data: projects } = useProjects();
+  // Todas las tablas quedan cargadas (y en caché para usar sin conexión), se abra la pantalla que se abra.
+  usePeople();
+  useMeetings();
+  useNotes();
+  useFiles();
   const inboxCount = tasks.filter((t) => t.status === "inbox").length;
   const online = useOnline();
   const pending = usePendingCount();

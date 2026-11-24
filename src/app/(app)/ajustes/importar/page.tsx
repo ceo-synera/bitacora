@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { insert, snapshot, useFiles, useMeetings } from "@/lib/db";
+import { insert, useFiles, useMeetings, usePeople, useProjects } from "@/lib/db";
 import { signedUrl, uploadFile } from "@/lib/files";
 import { readSheet, rowsToObjects, type Workbook } from "@/lib/sheets";
 import { findByName, guessMapping, IMPORT_FIELDS, mapRows, type Mapping } from "@/lib/importer";
@@ -68,8 +68,8 @@ export default function ImportarPage() {
     const all = table && mapping.title ? mapRows(table.rows, mapping) : [];
     return skipDone ? all.filter((t) => t.status !== "done") : all;
   }, [table, mapping, skipDone]);
-  const people = snapshot("people");
-  const projects = snapshot("projects");
+  const { data: people } = usePeople();
+  const { data: projects } = useProjects();
   const newPeople = [...new Set(mapped.map((t) => t.assignee).filter((a): a is string => !!a && !findByName(people, a)))];
   const newProjects = [...new Set(mapped.map((t) => t.project).filter((p): p is string => !!p && !findByName(projects, p)))];
 
