@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "./supabase";
+import { t } from "./i18n";
 import { insert, remove, snapshot } from "./db";
 import type { FileRow } from "./types";
 
@@ -16,10 +17,10 @@ export async function uploadFile(
   file: File,
   meta: { project_id?: string | null; meeting_id?: string | null; task_id?: string | null; role?: FileRow["role"] } = {},
 ): Promise<FileRow> {
-  if (!navigator.onLine) throw new Error("Para subir archivos hace falta conexión.");
+  if (!navigator.onLine) throw new Error(t("Para subir archivos hace falta conexión.", "You need a connection to upload files."));
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user.id;
-  if (!uid) throw new Error("Sesión vencida: volvé a entrar.");
+  if (!uid) throw new Error(t("Sesión vencida: volvé a entrar.", "Session expired: sign in again."));
   const id = crypto.randomUUID();
   const path = `${uid}/${meta.project_id ?? "general"}/${id}-${safe(file.name)}`;
   const { error } = await supabase.storage.from("files").upload(path, file, {

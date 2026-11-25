@@ -1,6 +1,7 @@
 "use client";
 
 import { insert, ready, snapshot } from "./db";
+import { t } from "./i18n";
 import { classifyMeetingPdf, ROLE_LABEL } from "./meeting-pdf";
 import { uploadFile } from "./files";
 import type { Meeting } from "./types";
@@ -39,7 +40,7 @@ export async function uploadMeetingPdfs(files: File[], forceMeeting?: Meeting) {
       continue;
     }
     await uploadFile(file, { project_id: meeting.project_id, meeting_id: meeting.id, role: info?.role ?? null });
-    done.push(info ? `${ROLE_LABEL[info.role]} del ${info.date}` : file.name);
+    done.push(info ? `${ROLE_LABEL[info.role]} ${t("del", "for")} ${info.date}` : file.name);
   }
   return { done, skipped };
 }

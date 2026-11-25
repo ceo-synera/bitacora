@@ -1,6 +1,9 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, format, parseISO, differenceInCalendarDays, startOfWeek } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es } from "date-fns/locale";
+import { getLang, t } from "./i18n";
+
+const loc = () => (getLang() === "en" ? enUS : es);
 
 export const TZ = "America/Montevideo";
 
@@ -30,16 +33,17 @@ export function isMonday(date: string): boolean {
 /** "hoy", "mañana", "ayer", "lun 3 nov", con el año si no es el actual. */
 export function humanDate(date: string, ref: string = today()): string {
   const d = differenceInCalendarDays(parseISO(date), parseISO(ref));
-  if (d === 0) return "hoy";
-  if (d === 1) return "mañana";
-  if (d === -1) return "ayer";
+  if (d === 0) return t("hoy", "today");
+  if (d === 1) return t("mañana", "tomorrow");
+  if (d === -1) return t("ayer", "yesterday");
   const sameYear = date.slice(0, 4) === ref.slice(0, 4);
+  if (getLang() === "en") return format(parseISO(date), sameYear ? "EEE MMM d" : "MMM d, yyyy", { locale: enUS });
   return format(parseISO(date), sameYear ? "EEE d MMM" : "d MMM yyyy", { locale: es });
 }
 
 /** "Martes 24 de noviembre" */
 export function longDate(date: string): string {
-  const s = format(parseISO(date), "EEEE d 'de' MMMM", { locale: es });
+  const s = getLang() === "en" ? format(parseISO(date), "EEEE, MMMM d", { locale: enUS }) : format(parseISO(date), "EEEE d 'de' MMMM", { locale: es });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -52,4 +56,9 @@ export function montevideoInstant(date: string, time: string): Date {
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm] = time.split(":").map(Number);
   return new Date(new TZDate(y, m - 1, d, hh, mm, 0, TZ).getTime());
+}
+
+/** Formato de fecha con el idioma de la interfaz (date-fns). */
+export function fmt(date: string, pattern: string): string {
+  return format(parseISO(date), pattern, { locale: loc() });
 }

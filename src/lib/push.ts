@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "./supabase";
+import { t } from "./i18n";
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -34,9 +35,9 @@ export async function currentSubscription() {
 
 /** Activa los avisos en este dispositivo y guarda la suscripción. */
 export async function enablePush() {
-  if (!pushSupported()) throw new Error("Este navegador no soporta notificaciones. En iPhone, instalá la app desde Safari (Compartir → Agregar a inicio).");
+  if (!pushSupported()) throw new Error(t("Este navegador no soporta notificaciones. En iPhone, instalá la app desde Safari (Compartir → Agregar a inicio).", "This browser doesn't support notifications. On iPhone, install the app from Safari (Share → Add to Home Screen)."));
   const perm = await Notification.requestPermission();
-  if (perm !== "granted") throw new Error("No diste permiso para notificaciones.");
+  if (perm !== "granted") throw new Error(t("No diste permiso para notificaciones.", "Notification permission was not granted."));
   const reg = (await navigator.serviceWorker.getRegistration("/")) ?? (await navigator.serviceWorker.register("/sw.js", { scope: "/" }));
   await navigator.serviceWorker.ready;
   const sub =

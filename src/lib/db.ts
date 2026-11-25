@@ -6,6 +6,7 @@ import { get, set, del } from "idb-keyval";
 import { useSyncExternalStore } from "react";
 import { supabase } from "./supabase";
 import { toast } from "./toast";
+import { t } from "./i18n";
 import type { TableName, Tables } from "./types";
 
 /*
@@ -46,6 +47,7 @@ const ORDER: Record<TableName, { column: string; ascending: boolean }> = {
   notes: { column: "updated_at", ascending: false },
   files: { column: "created_at", ascending: false },
   project_members: { column: "created_at", ascending: true },
+  meeting_attendees: { column: "created_at", ascending: true },
 };
 
 // ---------- outbox ----------
@@ -123,7 +125,7 @@ export function flush(): Promise<void> {
       }
       if (res.error && isNetworkError(res.error, res.status)) return; // sin red: queda en cola
       if (res.error) {
-        toast(`No se pudo guardar un cambio: ${res.error.message}`, "error");
+        toast(`${t("No se pudo guardar un cambio", "Couldn't save a change")}: ${res.error.message}`, "error");
         queryClient.invalidateQueries({ queryKey: [op.table] });
       }
       outbox.shift();
@@ -169,6 +171,7 @@ export const useMeetings = () => useTable("meetings");
 export const useNotes = () => useTable("notes");
 export const useFiles = () => useTable("files");
 export const useMembers = () => useTable("project_members");
+export const useAttendees = () => useTable("meeting_attendees");
 
 // ---------- escritura ----------
 
@@ -179,6 +182,7 @@ const DEFAULTS: { [T in TableName]: () => Omit<Tables[T], "id"> } = {
   projects: () => ({ name: "", color: "#6366f1", status: "active", description_md: "", created_at: now() }),
   people: () => ({ name: "", email: null, team: null, role: null, phone: null, notes_md: "", created_at: now() }),
   project_members: () => ({ project_id: "", person_id: "", role: null, created_at: now() }),
+  meeting_attendees: () => ({ meeting_id: "", person_id: "", created_at: now() }),
   tasks: () => ({
     project_id: null,
     meeting_id: null,
@@ -240,4 +244,10 @@ export async function ready<T extends TableName>(table: T): Promise<Tables[T][]>
 /** Lee una tabla del caché sin suscribirse (para usar dentro de acciones). */
 export function snapshot<T extends TableName>(table: T): Tables[T][] {
   return (queryClient.getQueryData<Tables[T][]>([table]) ?? []) as Tables[T][];
+}
+
+/** Mezcla datos que vienen del servidor (por ejemplo, traducciones) en el caché, sin pasar por la cola. */
+export function mergeLocal<T extends TableName>(table: T, rows: (Partial<Tables[T]> & { id: string })[]) {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  queryClient.setQueryData<Tables[T][]>([table], (old = []) => old.map((r) => (byId.has(r.id) ? ({ ...r, ...byId.get(r.id) } as Tables[T]) : r)));
 }

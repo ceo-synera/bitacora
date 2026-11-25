@@ -1,3 +1,6 @@
+import { t } from "./i18n";
+import type { Translations } from "./translation";
+
 export type Status = "inbox" | "todo" | "doing" | "waiting" | "done";
 export type Priority = "high" | "normal" | "low";
 
@@ -48,9 +51,19 @@ export type Task = {
   recurrence: string | null; // RRULE, ej. FREQ=WEEKLY;BYDAY=MO
   sort: number;
   reminded_at?: string | null;
+  lang?: "es" | "en" | null;
+  translations?: Translations;
   created_at: string;
   updated_at: string;
   done_at: string | null;
+};
+
+export type MeetingAttendee = {
+  id: string;
+  owner_id?: string;
+  meeting_id: string;
+  person_id: string;
+  created_at: string;
 };
 
 export type Meeting = {
@@ -99,21 +112,23 @@ export type Tables = {
   notes: Note;
   files: FileRow;
   project_members: ProjectMember;
+  meeting_attendees: MeetingAttendee;
 };
 
 export type TableName = keyof Tables;
 
+// Con getters: el texto sale en el idioma de la interfaz en el momento en que se usa.
 export const STATUS_LABEL: Record<Status, string> = {
-  inbox: "Bandeja",
-  todo: "Por hacer",
-  doing: "En curso",
-  waiting: "Esperando",
-  done: "Hecha",
+  get inbox() { return t("Bandeja", "Inbox"); },
+  get todo() { return t("Por hacer", "To do"); },
+  get doing() { return t("En curso", "Doing"); },
+  get waiting() { return t("Esperando", "Waiting"); },
+  get done() { return t("Hecha", "Done"); },
 };
 
 export const PRIORITY_LABEL: Record<Priority, string> = {
-  high: "Alta",
-  normal: "Normal",
-  low: "Baja",
+  get high() { return t("Alta", "High"); },
+  get normal() { return t("Normal", "Normal"); },
+  get low() { return t("Baja", "Low"); },
 };
 export const COLORS = ["#4f46e5", "#0891b2", "#16a34a", "#ca8a04", "#ea580c", "#db2777", "#7c3aed", "#475569"];

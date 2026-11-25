@@ -1,17 +1,20 @@
+import { t } from "./i18n";
 import { RRule } from "rrule";
 import { addDaysISO } from "./dates";
 
+const preset = (es: string, en: string, value: string | null) => ({ get label() { return t(es, en); }, value });
+
 export const RECURRENCE_PRESETS: { label: string; value: string | null }[] = [
-  { label: "No se repite", value: null },
-  { label: "Todos los días", value: "FREQ=DAILY" },
-  { label: "Días hábiles", value: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR" },
-  { label: "Todas las semanas", value: "FREQ=WEEKLY" },
-  { label: "Cada 2 semanas", value: "FREQ=WEEKLY;INTERVAL=2" },
-  { label: "Todos los meses", value: "FREQ=MONTHLY" },
+  preset("No se repite", "Doesn't repeat", null),
+  preset("Todos los días", "Every day", "FREQ=DAILY"),
+  preset("Días hábiles", "Weekdays", "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"),
+  preset("Todas las semanas", "Every week", "FREQ=WEEKLY"),
+  preset("Cada 2 semanas", "Every 2 weeks", "FREQ=WEEKLY;INTERVAL=2"),
+  preset("Todos los meses", "Every month", "FREQ=MONTHLY"),
 ];
 
 export function recurrenceLabel(rule: string | null): string {
-  if (!rule) return "No se repite";
+  if (!rule) return t("No se repite", "Doesn't repeat");
   return RECURRENCE_PRESETS.find((p) => p.value === rule)?.label ?? rule;
 }
 

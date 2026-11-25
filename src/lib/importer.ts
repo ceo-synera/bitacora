@@ -1,17 +1,20 @@
+import { t } from "./i18n";
 import type { Priority, Status } from "./types";
 
 export type Row = Record<string, unknown>;
 
 export type ImportField = "title" | "assignee" | "due_date" | "status" | "notes" | "project" | "priority";
 
+const f = (field: ImportField, es: string, en: string, required = false) => ({ field, required, get label() { return t(es, en); } });
+
 export const IMPORT_FIELDS: { field: ImportField; label: string; required?: boolean }[] = [
-  { field: "title", label: "Título", required: true },
-  { field: "assignee", label: "Responsable" },
-  { field: "due_date", label: "Fecha" },
-  { field: "status", label: "Estado" },
-  { field: "priority", label: "Prioridad" },
-  { field: "notes", label: "Notas" },
-  { field: "project", label: "Proyecto" },
+  f("title", "Título", "Title", true),
+  f("assignee", "Responsable", "Owner"),
+  f("due_date", "Fecha", "Date"),
+  f("status", "Estado", "Status"),
+  f("priority", "Prioridad", "Priority"),
+  f("notes", "Notas", "Notes"),
+  f("project", "Proyecto", "Project"),
 ];
 
 export type Mapping = Partial<Record<ImportField, string>>;

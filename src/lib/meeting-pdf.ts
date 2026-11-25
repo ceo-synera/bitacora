@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 export type MeetingPdfRole = "agenda" | "presentation" | "minutes";
 
 const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -25,7 +27,7 @@ export function classifyMeetingPdf(fileName: string): { date: string; role: Meet
 }
 
 export const ROLE_LABEL: Record<MeetingPdfRole, string> = {
-  agenda: "Agenda",
-  presentation: "Presentación",
-  minutes: "Minuta",
+  get agenda() { return t("Agenda", "Agenda"); },
+  get presentation() { return t("Presentación", "Presentation"); },
+  get minutes() { return t("Minuta", "Minutes"); },
 };
