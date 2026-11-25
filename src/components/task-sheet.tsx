@@ -1,11 +1,13 @@
 "use client";
 
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, Languages } from "lucide-react";
 import { useState } from "react";
 import { insert, remove, update, useMeetings, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
 import { longDate } from "@/lib/dates";
 import type { Task } from "@/lib/types";
+import { t, useLang } from "@/lib/i18n";
+import { shown } from "@/lib/translation";
 import { Dialog } from "./ui";
 import { openTask, useOpenTask } from "./open-task";
 import { TaskFields } from "./task-fields";
@@ -47,6 +49,7 @@ function TaskEditor({ task }: { task: Task }) {
         />
       </div>
 
+      <TranslationHint task={task} />
       <TaskFields value={task} onChange={set} />
       {meeting && <p className="text-xs text-muted">Salió de la reunión del {longDate(meeting.date)}.</p>}
 
@@ -126,5 +129,21 @@ function AddSubtask({ parent }: { parent: Task }) {
       <Plus className="size-4 text-muted" />
       <input className="flex-1 bg-transparent py-1 text-sm outline-none" placeholder="Agregar subtarea" value={v} onChange={(e) => setV(e.target.value)} />
     </form>
+  );
+}
+
+/** Si la tarea está en el otro idioma, muestra la traducción (se edita siempre el original). */
+function TranslationHint({ task }: { task: Task }) {
+  const lang = useLang();
+  const v = shown(task, lang);
+  if (!v.translated) return null;
+  return (
+    <div className="rounded-lg bg-soft px-3 py-2 text-sm">
+      <div className="mb-0.5 flex items-center gap-1 text-xs text-muted">
+        <Languages className="size-3" /> {t("Traducción automática", "Automatic translation")} · {t("editás el original de arriba", "you edit the original above")}
+      </div>
+      <div className="font-medium">{v.title}</div>
+      {v.notes && <div className="mt-1 whitespace-pre-wrap text-muted">{v.notes}</div>}
+    </div>
   );
 }

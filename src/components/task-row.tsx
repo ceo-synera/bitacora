@@ -5,6 +5,9 @@ import { useFiles, usePeople, useProjects, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
 import { humanDate, shortTime, today } from "@/lib/dates";
 import type { Task } from "@/lib/types";
+import { useLang, t as tr } from "@/lib/i18n";
+import { shown } from "@/lib/translation";
+import { Languages } from "lucide-react";
 import { openTask } from "./open-task";
 import { ProjectDot } from "./pickers";
 
@@ -45,6 +48,8 @@ export function TaskRow({
   const person = people.find((p) => p.id === task.assignee_id);
   const subs = tasks.filter((t) => t.parent_id === task.id);
   const subsDone = subs.filter((t) => t.status === "done").length;
+  const lang = useLang();
+  const view = shown(task, lang);
   const done = task.status === "done";
   const overdue = !done && task.due_date && task.due_date < today();
 
@@ -62,7 +67,12 @@ export function TaskRow({
       <div className="min-w-0 flex-1">
         <div className={`text-[15px] leading-snug md:text-sm ${done ? "text-muted line-through" : ""}`}>
           {task.priority === "high" && !done && <ArrowUp className="mr-0.5 inline size-3.5 text-danger" />}
-          {task.title}
+          {view.title}
+          {view.translated && (
+            <span title={`${tr("Original", "Original")}: ${task.title}`} className="ml-1 inline-flex align-middle text-muted">
+              <Languages className="size-3" aria-label={tr("Traducida", "Translated")} />
+            </span>
+          )}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
           {showDate && task.due_date && (
@@ -98,7 +108,7 @@ export function TaskRow({
               {nFiles}
             </span>
           )}
-          {task.notes_md && <span className="max-w-60 truncate">{task.notes_md.split("\n")[0]}</span>}
+          {view.notes && <span className="max-w-60 truncate">{view.notes.split("\n")[0]}</span>}
           {subs.length > 0 && (
             <span className="inline-flex items-center gap-1">
               <ListChecks className="size-3" />

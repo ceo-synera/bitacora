@@ -143,7 +143,7 @@ export function CommandPalette() {
               <Command.Item
                 key={t.id}
                 value={`tarea ${t.id}`}
-                keywords={[t.title, t.notes_md]}
+                keywords={[t.title, t.notes_md, t.translations?.es?.title ?? "", t.translations?.en?.title ?? ""]}
                 onSelect={() => {
                   close();
                   openTask(t.id);

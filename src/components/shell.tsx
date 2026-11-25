@@ -18,7 +18,7 @@ import {
   FolderKanban,
   Contact,
 } from "lucide-react";
-import { useFiles, useMembers, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
+import { useAttendees, useFiles, useMembers, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
 import { Logo } from "./logo";
 import { ProjectDot } from "./pickers";
 import { TaskSheet } from "./task-sheet";
@@ -26,6 +26,8 @@ import { CommandPalette, openPalette } from "./command-palette";
 import { Dialog } from "./ui";
 import { CreateDialogs } from "./create-dialogs";
 import { openCreate } from "./create-store";
+import { useAutoTranslate } from "./auto-translate";
+import { LangToggle } from "./lang-toggle";
 
 const NAV = [
   { href: "/", label: "Hoy", icon: Sun },
@@ -77,6 +79,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useNotes();
   useFiles();
   useMembers();
+  useAttendees();
+  useAutoTranslate();
   const inboxCount = tasks.filter((t) => t.status === "inbox").length;
   const online = useOnline();
   const pending = usePendingCount();
@@ -125,9 +129,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
             ))}
         </nav>
         <div className="border-t border-line p-2">
-          <Link href="/ajustes" className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-soft hover:text-ink">
-            <Settings className="size-4" /> Ajustes
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link href="/ajustes" className="flex flex-1 items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-soft hover:text-ink">
+              <Settings className="size-4" /> Ajustes
+            </Link>
+            <LangToggle />
+          </div>
         </div>
       </aside>
 
@@ -136,7 +143,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <header className="pt-safe sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/90 px-4 py-2 backdrop-blur md:hidden">
           <Logo className="size-6" />
           <span className="font-semibold">Bitácora</span>
-          <button onClick={openPalette} className="btn-ghost ml-auto p-2" aria-label="Buscar">
+          <LangToggle className="ml-auto" />
+          <button onClick={openPalette} className="btn-ghost p-2" aria-label="Buscar">
             <Search className="size-5" />
           </button>
         </header>
