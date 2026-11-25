@@ -19,6 +19,7 @@ import { QuickAdd } from "@/components/quick-add";
 import { MarkdownField } from "@/components/markdown";
 import { ProjectSelect } from "@/components/pickers";
 import { classifyMeetingPdf } from "@/lib/meeting-pdf";
+import { Attendees } from "@/components/attendees";
 
 export default function MeetingPage() {
   const { id } = useParams<{ id: string }>();
@@ -74,6 +75,10 @@ export default function MeetingPage() {
         {byRole("presentation") && <FileOpenButton file={byRole("presentation")!} icon={<Presentation className="size-4" />} label="Presentación" primary />}
         {byRole("minutes") && <FileOpenButton file={byRole("minutes")!} icon={<ScrollText className="size-4" />} label="Minuta" />}
       </div>
+
+      <Section title="Asistentes">
+        <Attendees meetingId={m.id} projectId={m.project_id} />
+      </Section>
 
       <Section title="Archivos" count={mf.length}>
         {mf.length > 0 && (

@@ -11,6 +11,7 @@ import { toast } from "@/lib/toast";
 import { Empty, PageHeader } from "@/components/ui";
 import { FileDrop } from "@/components/dropzone";
 import { ProjectDot } from "@/components/pickers";
+import { AttendeeFaces } from "@/components/attendees";
 
 export default function ReunionesPage() {
   const router = useRouter();
@@ -86,6 +87,7 @@ export default function ReunionesPage() {
                       {mt.length > 0 && <span>{mt.length} tareas</span>}
                     </div>
                   </div>
+                  <AttendeeFaces meetingId={m.id} />
                   <div className="flex gap-1.5 text-muted">
                     {mf.some((f) => f.role === "agenda") && <FileText className="size-4" aria-label="Agenda" />}
                     {mf.some((f) => f.role === "presentation") && <Presentation className="size-4" aria-label="Presentación" />}
