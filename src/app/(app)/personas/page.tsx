@@ -9,6 +9,7 @@ import { Empty, PageHeader, Section } from "@/components/ui";
 import { ProjectDot } from "@/components/pickers";
 import { openCreate } from "@/components/create-store";
 import { Avatar } from "@/components/avatar";
+import { t } from "@/lib/i18n";
 
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -22,23 +23,24 @@ export default function PersonasPage() {
 
   const shown = people.filter((p) => fold(`${p.name} ${p.role ?? ""} ${p.team ?? ""} ${p.email ?? ""}`).includes(fold(q)));
   const teams = new Map<string, typeof shown>();
-  for (const p of shown) teams.set(p.team || "Sin equipo", [...(teams.get(p.team || "Sin equipo") ?? []), p]);
+  const noTeam = t("Sin equipo", "No team");
+  for (const p of shown) teams.set(p.team || noTeam, [...(teams.get(p.team || noTeam) ?? []), p]);
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Personas">
+      <PageHeader title={t("Personas", "People")}>
         <button className="btn-primary" onClick={() => openCreate({ kind: "person" })}>
-          <UserPlus className="size-4" /> Persona
+          <UserPlus className="size-4" /> {t("Persona", "Person")}
         </button>
       </PageHeader>
-      <input className="input mb-4" placeholder="Buscar por nombre, rol, equipo o mail" value={q} onChange={(e) => setQ(e.target.value)} />
-      {shown.length === 0 && <Empty>No hay personas{q ? " con esa búsqueda" : ""}.</Empty>}
+      <input className="input mb-4" placeholder={t("Buscar por nombre, rol, equipo o mail", "Search by name, role, team or email")} value={q} onChange={(e) => setQ(e.target.value)} />
+      {shown.length === 0 && <Empty>{q ? t("No hay personas con esa búsqueda.", "No people match that search.") : t("No hay personas.", "No people yet.")}</Empty>}
       {[...teams.entries()].map(([team, ps]) => (
         <Section key={team} title={team} count={ps.length}>
           <ul className="card divide-y divide-line">
             {ps.map((p) => {
-              const open = tasks.filter((t) => t.assignee_id === p.id && !t.parent_id && t.status !== "done");
-              const late = open.filter((t) => t.due_date && t.due_date < d).length;
+              const open = tasks.filter((task) => task.assignee_id === p.id && !task.parent_id && task.status !== "done");
+              const late = open.filter((task) => task.due_date && task.due_date < d).length;
               const projs = members.filter((m) => m.person_id === p.id).map((m) => projects.find((x) => x.id === m.project_id)).filter(Boolean);
               return (
                 <li key={p.id}>
@@ -63,8 +65,8 @@ export default function PersonasPage() {
                       </div>
                     </div>
                     <div className="text-right text-xs">
-                      <div>{open.length} abiertas</div>
-                      {late > 0 && <div className="text-danger">{late} vencidas</div>}
+                      <div>{open.length} {t("abiertas", "open")}</div>
+                      {late > 0 && <div className="text-danger">{late} {t("vencidas", "overdue")}</div>}
                     </div>
                   </Link>
                 </li>

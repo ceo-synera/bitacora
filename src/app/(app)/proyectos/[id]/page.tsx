@@ -21,6 +21,7 @@ import { QuickAdd } from "@/components/quick-add";
 import { TaskList } from "@/components/task-row";
 import { openCreate } from "@/components/create-store";
 import { COLORS, type Project } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
 type Tab = "resumen" | "tareas" | "reuniones" | "archivos" | "notas" | "equipo";
 
@@ -30,7 +31,7 @@ export default function ProjectPage() {
   const { data: projects, isFetched } = useProjects();
   const [tab, setTab] = useState<Tab>("resumen");
   const p = projects.find((x) => x.id === id);
-  if (!p) return <Empty>{isFetched ? "No encontré ese proyecto." : "Cargando…"}</Empty>;
+  if (!p) return <Empty>{isFetched ? t("No encontré ese proyecto.", "Project not found.") : t("Cargando…", "Loading…")}</Empty>;
 
   return (
     <div>
@@ -54,20 +55,20 @@ export default function ProjectPage() {
         <button className="btn-outline" onClick={() => update("projects", p.id, { status: p.status === "active" ? "archived" : "active" })}>
           {p.status === "active" ? (
             <>
-              <Archive className="size-4" /> Archivar
+              <Archive className="size-4" /> {t("Archivar", "Archive")}
             </>
           ) : (
             <>
-              <ArchiveRestore className="size-4" /> Reactivar
+              <ArchiveRestore className="size-4" /> {t("Reactivar", "Reactivate")}
             </>
           )}
         </button>
         {p.status === "archived" && (
           <button
             className="btn-ghost p-2 text-muted hover:text-danger"
-            aria-label="Borrar proyecto"
+            aria-label={t("Borrar proyecto", "Delete project")}
             onClick={() => {
-              if (confirm(`¿Borrar "${p.name}"? Sus tareas, notas y archivos quedan sin proyecto.`)) {
+              if (confirm(t(`¿Borrar "${p.name}"? Sus tareas, notas y archivos quedan sin proyecto.`, `Delete "${p.name}"? Its tasks, notes and files will be left without a project.`))) {
                 remove("projects", p.id);
                 router.replace("/proyectos");
               }
@@ -81,12 +82,12 @@ export default function ProjectPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { value: "resumen", label: "Resumen" },
-          { value: "tareas", label: "Tareas" },
-          { value: "reuniones", label: "Reuniones" },
-          { value: "archivos", label: "Archivos" },
-          { value: "notas", label: "Notas" },
-          { value: "equipo", label: "Equipo" },
+          { value: "resumen", label: t("Resumen", "Overview") },
+          { value: "tareas", label: t("Tareas", "Tasks") },
+          { value: "reuniones", label: t("Reuniones", "Meetings") },
+          { value: "archivos", label: t("Archivos", "Files") },
+          { value: "notas", label: t("Notas", "Notes") },
+          { value: "equipo", label: t("Equipo", "Team") },
         ]}
       />
       {tab === "resumen" && <ProjectSummary project={p} goTo={setTab} />}
@@ -102,7 +103,7 @@ export default function ProjectPage() {
 function ProjectMeetings({ projectId }: { projectId: string }) {
   const { data: meetings } = useMeetings();
   const ms = meetings.filter((m) => m.project_id === projectId);
-  if (!ms.length) return <Empty>Sin reuniones en este proyecto.</Empty>;
+  if (!ms.length) return <Empty>{t("Sin reuniones en este proyecto.", "No meetings in this project.")}</Empty>;
   return (
     <ul className="card divide-y divide-line">
       {ms.map((m) => (
@@ -141,24 +142,24 @@ function ProjectFiles({ projectId }: { projectId: string }) {
         </div>
         <AddLinkButton meta={{ project_id: projectId }} />
       </div>
-      {fs.length ? <FileList files={fs} showProject={false} /> : <Empty>Sin archivos.</Empty>}
+      {fs.length ? <FileList files={fs} showProject={false} /> : <Empty>{t("Sin archivos.", "No files.")}</Empty>}
     </div>
   );
 }
 
-function ProjectSummary({ project, goTo }: { project: Project; goTo: (t: Tab) => void }) {
+function ProjectSummary({ project, goTo }: { project: Project; goTo: (tab: Tab) => void }) {
   const { data: tasks } = useTasks();
   const { data: meetings } = useMeetings();
   const { data: members } = useMembers();
   const { data: people } = usePeople();
   const d = today();
-  const ts = tasks.filter((t) => t.project_id === project.id && !t.parent_id && t.status !== "inbox");
-  const open = ts.filter((t) => t.status !== "done");
-  const late = open.filter((t) => t.due_date && t.due_date < d);
-  const waiting = open.filter((t) => t.assignee_id || t.status === "waiting");
-  const doneWeek = ts.filter((t) => t.status === "done" && (t.done_at ?? "") >= addDaysISO(d, -7));
+  const ts = tasks.filter((task) => task.project_id === project.id && !task.parent_id && task.status !== "inbox");
+  const open = ts.filter((task) => task.status !== "done");
+  const late = open.filter((task) => task.due_date && task.due_date < d);
+  const waiting = open.filter((task) => task.assignee_id || task.status === "waiting");
+  const doneWeek = ts.filter((task) => task.status === "done" && (task.done_at ?? "") >= addDaysISO(d, -7));
   const next = open
-    .filter((t) => !t.assignee_id && t.status !== "waiting")
+    .filter((task) => !task.assignee_id && task.status !== "waiting")
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999") || (a.priority === "high" ? -1 : 0))
     .slice(0, 5);
   const ms = meetings.filter((m) => m.project_id === project.id);
@@ -176,54 +177,54 @@ function ProjectSummary({ project, goTo }: { project: Project; goTo: (t: Tab) =>
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div>
-        <Section title="De qué se trata">
+        <Section title={t("De qué se trata", "What it's about")}>
           <MarkdownField
             value={project.description_md}
             onChange={(v) => update("projects", project.id, { description_md: v })}
-            placeholder="Objetivo, cliente, qué hay que entregar, decisiones importantes…"
+            placeholder={t("Objetivo, cliente, qué hay que entregar, decisiones importantes…", "Goal, client, deliverables, key decisions…")}
             rows={5}
           />
         </Section>
         <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-4">
-          {stat(open.length, "abiertas")}
-          {stat(late.length, "vencidas", late.length ? "text-danger" : "")}
-          {stat(waiting.length, "esperando de otros")}
-          {stat(doneWeek.length, "hechas esta semana")}
+          {stat(open.length, t("abiertas", "open"))}
+          {stat(late.length, t("vencidas", "overdue"), late.length ? "text-danger" : "")}
+          {stat(waiting.length, t("esperando de otros", "waiting on others"))}
+          {stat(doneWeek.length, t("hechas esta semana", "done this week"))}
         </div>
-        <Section title="Lo próximo tuyo">
-          {next.length ? <TaskList tasks={next} showProject={false} /> : <Empty>Nada pendiente tuyo.</Empty>}
+        <Section title={t("Lo próximo tuyo", "Your next tasks")}>
+          {next.length ? <TaskList tasks={next} showProject={false} /> : <Empty>{t("Nada pendiente tuyo.", "Nothing pending for you.")}</Empty>}
           <div className="mt-2">
             <QuickAdd defaults={{ project_id: project.id }} />
           </div>
         </Section>
-        <Section title="Links clave">
+        <Section title={t("Links clave", "Key links")}>
           <Attachments limit={8} meta={{ project_id: project.id }} filter={(f) => f.project_id === project.id && !f.task_id && !f.meeting_id} />
         </Section>
       </div>
       <aside>
-        <Section title="Reuniones">
+        <Section title={t("Reuniones", "Meetings")}>
           <div className="card divide-y divide-line text-sm">
             {upcoming && (
               <Link href={`/reuniones/${upcoming.id}`} className="block px-3 py-2 hover:bg-soft">
-                <div className="text-xs text-muted">Próxima</div>
+                <div className="text-xs text-muted">{t("Próxima", "Next")}</div>
                 {longDate(upcoming.date)}
               </Link>
             )}
             {last && (
               <Link href={`/reuniones/${last.id}`} className="block px-3 py-2 hover:bg-soft">
-                <div className="text-xs text-muted">Última</div>
+                <div className="text-xs text-muted">{t("Última", "Last")}</div>
                 {longDate(last.date)}
               </Link>
             )}
-            {!upcoming && !last && <p className="px-3 py-2 text-muted">Sin reuniones.</p>}
+            {!upcoming && !last && <p className="px-3 py-2 text-muted">{t("Sin reuniones.", "No meetings.")}</p>}
           </div>
         </Section>
-        <Section title="Equipo" count={team.length}>
+        <Section title={t("Equipo", "Team")} count={team.length}>
           <div className="card divide-y divide-line">
             {team.map((m) => {
               const person = people.find((x) => x.id === m.person_id);
               if (!person) return null;
-              const n = open.filter((t) => t.assignee_id === person.id).length;
+              const n = open.filter((task) => task.assignee_id === person.id).length;
               return (
                 <Link key={m.id} href={`/personas/${person.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-soft">
                   <Avatar name={person.name} className="size-7 text-xs" />
@@ -236,7 +237,7 @@ function ProjectSummary({ project, goTo }: { project: Project; goTo: (t: Tab) =>
               );
             })}
             <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted hover:bg-soft" onClick={() => goTo("equipo")}>
-              <Users className="size-4" /> Armar equipo
+              <Users className="size-4" /> {t("Armar equipo", "Build team")}
             </button>
           </div>
         </Section>
@@ -253,13 +254,13 @@ function ProjectTeam({ projectId }: { projectId: string }) {
   const outside = people.filter((p) => !team.some((m) => m.person_id === p.id));
   return (
     <div className="max-w-2xl space-y-3">
-      {team.length === 0 && <Empty>Nadie en el equipo todavía.</Empty>}
+      {team.length === 0 && <Empty>{t("Nadie en el equipo todavía.", "No one on the team yet.")}</Empty>}
       {team.length > 0 && (
         <ul className="card divide-y divide-line">
           {team.map((m) => {
             const person = people.find((x) => x.id === m.person_id);
             if (!person) return null;
-            const open = tasks.filter((t) => t.project_id === projectId && t.assignee_id === person.id && !t.parent_id && t.status !== "done").length;
+            const open = tasks.filter((task) => task.project_id === projectId && task.assignee_id === person.id && !task.parent_id && task.status !== "done").length;
             return (
               <li key={m.id} className="flex items-center gap-3 px-4 py-2.5">
                 <Avatar name={person.name} className="size-8 text-xs" />
@@ -269,13 +270,13 @@ function ProjectTeam({ projectId }: { projectId: string }) {
                   </Link>
                   <input
                     className="block w-full bg-transparent text-xs text-muted outline-none"
-                    placeholder="Rol en el proyecto"
+                    placeholder={t("Rol en el proyecto", "Role in the project")}
                     defaultValue={m.role ?? ""}
                     onBlur={(e) => e.target.value !== (m.role ?? "") && update("project_members", m.id, { role: e.target.value || null })}
                   />
                 </div>
-                <span className="text-xs text-muted">{open} abiertas</span>
-                <button className="p-1 text-muted hover:text-danger" onClick={() => remove("project_members", m.id)} aria-label="Sacar del equipo">
+                <span className="text-xs text-muted">{open} {t("abiertas", "open")}</span>
+                <button className="p-1 text-muted hover:text-danger" onClick={() => remove("project_members", m.id)} aria-label={t("Sacar del equipo", "Remove from team")}>
                   <X className="size-4" />
                 </button>
               </li>
@@ -293,7 +294,7 @@ function ProjectTeam({ projectId }: { projectId: string }) {
               if (person) insert("project_members", { project_id: projectId, person_id: person.id, role: person.role });
             }}
           >
-            <option value="">Sumar a alguien que ya existe…</option>
+            <option value="">{t("Sumar a alguien que ya existe…", "Add an existing person…")}</option>
             {outside.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -303,7 +304,7 @@ function ProjectTeam({ projectId }: { projectId: string }) {
           </select>
         )}
         <button className="btn-primary" onClick={() => openCreate({ kind: "person", defaults: { project_id: projectId } })}>
-          <UserPlus className="size-4" /> Nueva persona en el proyecto
+          <UserPlus className="size-4" /> {t("Nueva persona en el proyecto", "New person in the project")}
         </button>
       </div>
     </div>

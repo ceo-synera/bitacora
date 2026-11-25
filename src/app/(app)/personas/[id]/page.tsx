@@ -14,12 +14,13 @@ import { TaskList } from "@/components/task-row";
 import { QuickAdd } from "@/components/quick-add";
 import { MarkdownField } from "@/components/markdown";
 import { Field } from "@/components/task-fields";
+import { t } from "@/lib/i18n";
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
   const { data: people, isFetched } = usePeople();
   const p = people.find((x) => x.id === id);
-  if (!p) return <Empty>{isFetched ? "No encontré a esa persona." : "Cargando…"}</Empty>;
+  if (!p) return <Empty>{isFetched ? t("No encontré a esa persona.", "Person not found.") : t("Cargando…", "Loading…")}</Empty>;
   return <PersonView key={p.id} p={p} />;
 }
 
@@ -32,12 +33,12 @@ function PersonView({ p }: { p: Person }) {
   const d = today();
   const set = (patch: Partial<Person>) => update("people", p.id, patch);
 
-  const mine = tasks.filter((t) => t.assignee_id === p.id && !t.parent_id);
+  const mine = tasks.filter((task) => task.assignee_id === p.id && !task.parent_id);
   const open = mine
-    .filter((t) => t.status !== "done")
+    .filter((task) => task.status !== "done")
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999") || a.sort - b.sort);
-  const done = mine.filter((t) => t.status === "done");
-  const late = open.filter((t) => t.due_date && t.due_date < d).length;
+  const done = mine.filter((task) => task.status === "done");
+  const late = open.filter((task) => task.due_date && task.due_date < d).length;
   const myMembers = members.filter((m) => m.person_id === p.id);
   const free = projects.filter((x) => x.status === "active" && !myMembers.some((m) => m.project_id === x.id));
   const phoneDigits = p.phone?.replace(/[^\d]/g, "");
@@ -45,7 +46,7 @@ function PersonView({ p }: { p: Person }) {
   return (
     <div className="max-w-3xl">
       <Link href="/personas" className="text-sm text-muted hover:text-ink">
-        ← Personas
+        ← {t("Personas", "People")}
       </Link>
       <div className="mb-5 mt-2 flex items-center gap-3">
         <Avatar name={p.name} className="size-12 text-lg" />
@@ -56,12 +57,12 @@ function PersonView({ p }: { p: Person }) {
             onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && set({ name: e.target.value.trim() })}
           />
           <div className="text-sm text-muted">
-            {open.length} abiertas{late > 0 && <span className="text-danger"> · {late} vencidas</span>} · {done.length} hechas
+            {open.length} {t("abiertas", "open")}{late > 0 && <span className="text-danger"> · {late} {t("vencidas", "overdue")}</span>} · {done.length} {t("hechas", "done")}
           </div>
         </div>
         <div className="flex gap-1">
           {p.email && (
-            <a className="btn-outline p-2" href={`mailto:${p.email}`} aria-label="Mandar mail">
+            <a className="btn-outline p-2" href={`mailto:${p.email}`} aria-label={t("Mandar mail", "Send email")}>
               <Mail className="size-4" />
             </a>
           )}
@@ -70,7 +71,7 @@ function PersonView({ p }: { p: Person }) {
               <a className="btn-outline p-2" href={`https://wa.me/${phoneDigits}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">
                 <MessageCircle className="size-4" />
               </a>
-              <a className="btn-outline p-2" href={`tel:${p.phone}`} aria-label="Llamar">
+              <a className="btn-outline p-2" href={`tel:${p.phone}`} aria-label={t("Llamar", "Call")}>
                 <Phone className="size-4" />
               </a>
             </>
@@ -78,28 +79,28 @@ function PersonView({ p }: { p: Person }) {
         </div>
       </div>
 
-      <Section title="Ficha">
+      <Section title={t("Ficha", "Details")}>
         <div className="card grid grid-cols-2 gap-3 p-4 text-sm">
-          <Field label="Rol">
+          <Field label={t("Rol", "Role")}>
             <input className="input" defaultValue={p.role ?? ""} onBlur={(e) => e.target.value !== (p.role ?? "") && set({ role: e.target.value || null })} />
           </Field>
-          <Field label="Equipo / empresa">
+          <Field label={t("Equipo / empresa", "Team / company")}>
             <input className="input" defaultValue={p.team ?? ""} onBlur={(e) => e.target.value !== (p.team ?? "") && set({ team: e.target.value || null })} />
           </Field>
-          <Field label="Mail">
+          <Field label={t("Mail", "Email")}>
             <input className="input" type="email" defaultValue={p.email ?? ""} onBlur={(e) => e.target.value !== (p.email ?? "") && set({ email: e.target.value || null })} />
           </Field>
-          <Field label="Teléfono / WhatsApp">
+          <Field label={t("Teléfono / WhatsApp", "Phone / WhatsApp")}>
             <input className="input" type="tel" placeholder="+598…" defaultValue={p.phone ?? ""} onBlur={(e) => e.target.value !== (p.phone ?? "") && set({ phone: e.target.value || null })} />
           </Field>
           <div className="col-span-2">
-            <div className="mb-1 text-xs text-muted">Notas</div>
-            <MarkdownField value={p.notes_md} onChange={(v) => set({ notes_md: v })} placeholder="Zona horaria, cómo prefiere que le escriban, contexto…" rows={3} />
+            <div className="mb-1 text-xs text-muted">{t("Notas", "Notes")}</div>
+            <MarkdownField value={p.notes_md} onChange={(v) => set({ notes_md: v })} placeholder={t("Zona horaria, cómo prefiere que le escriban, contexto…", "Time zone, how they prefer to be contacted, context…")} rows={3} />
           </div>
         </div>
       </Section>
 
-      <Section title="Proyectos" count={myMembers.length}>
+      <Section title={t("Proyectos", "Projects")} count={myMembers.length}>
         <ul className="card divide-y divide-line">
           {myMembers.map((m) => {
             const proj = projects.find((x) => x.id === m.project_id);
@@ -112,11 +113,11 @@ function PersonView({ p }: { p: Person }) {
                 </Link>
                 <input
                   className="min-w-0 flex-1 bg-transparent text-sm text-muted outline-none"
-                  placeholder="Rol en este proyecto"
+                  placeholder={t("Rol en este proyecto", "Role in this project")}
                   defaultValue={m.role ?? ""}
                   onBlur={(e) => e.target.value !== (m.role ?? "") && update("project_members", m.id, { role: e.target.value || null })}
                 />
-                <button className="p-1 text-muted hover:text-danger" onClick={() => remove("project_members", m.id)} aria-label="Sacar del proyecto">
+                <button className="p-1 text-muted hover:text-danger" onClick={() => remove("project_members", m.id)} aria-label={t("Sacar del proyecto", "Remove from project")}>
                   <X className="size-4" />
                 </button>
               </li>
@@ -130,7 +131,7 @@ function PersonView({ p }: { p: Person }) {
                 value=""
                 onChange={(e) => e.target.value && insert("project_members", { project_id: e.target.value, person_id: p.id, role: p.role })}
               >
-                <option value="">Sumar a un proyecto…</option>
+                <option value="">{t("Sumar a un proyecto…", "Add to a project…")}</option>
                 {free.map((x) => (
                   <option key={x.id} value={x.id}>
                     {x.name}
@@ -142,14 +143,14 @@ function PersonView({ p }: { p: Person }) {
         </ul>
       </Section>
 
-      <Section title={`Lo que tiene ${p.name.split(" ")[0]}`} count={open.length}>
-        {open.length ? <TaskList tasks={open} /> : <Empty>Nada pendiente.</Empty>}
+      <Section title={t(`Lo que tiene ${p.name.split(" ")[0]}`, `${p.name.split(" ")[0]}'s tasks`)} count={open.length}>
+        {open.length ? <TaskList tasks={open} /> : <Empty>{t("Nada pendiente.", "Nothing pending.")}</Empty>}
         <div className="mt-2">
-          <QuickAdd defaults={{ assignee_id: p.id, project_id: myMembers.length === 1 ? myMembers[0].project_id : null }} placeholder={`Nueva tarea para ${p.name.split(" ")[0]}`} />
+          <QuickAdd defaults={{ assignee_id: p.id, project_id: myMembers.length === 1 ? myMembers[0].project_id : null }} placeholder={t(`Nueva tarea para ${p.name.split(" ")[0]}`, `New task for ${p.name.split(" ")[0]}`)} />
         </div>
         {done.length > 0 && (
           <button className="mt-3 text-sm text-muted hover:text-ink" onClick={() => setShowDone(!showDone)}>
-            {showDone ? "Ocultar" : "Ver"} {done.length} hechas
+            {showDone ? t("Ocultar", "Hide") : t("Ver", "Show")} {done.length} {t("hechas", "done")}
           </button>
         )}
         {showDone && <TaskList tasks={done} />}
@@ -158,13 +159,13 @@ function PersonView({ p }: { p: Person }) {
       <button
         className="btn-ghost text-danger"
         onClick={() => {
-          if (confirm(`¿Borrar a ${p.name}? Sus tareas quedan sin responsable.`)) {
+          if (confirm(t(`¿Borrar a ${p.name}? Sus tareas quedan sin responsable.`, `Delete ${p.name}? Their tasks will be left unassigned.`))) {
             remove("people", p.id);
             router.replace("/personas");
           }
         }}
       >
-        <Trash2 className="size-4" /> Borrar persona
+        <Trash2 className="size-4" /> {t("Borrar persona", "Delete person")}
       </button>
     </div>
   );
