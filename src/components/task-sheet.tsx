@@ -6,7 +6,8 @@ import { insert, remove, update, useMeetings, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
 import { longDate } from "@/lib/dates";
 import type { Task } from "@/lib/types";
-import { t, useLang } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/use-lang";
 import { shown } from "@/lib/translation";
 import { Dialog } from "./ui";
 import { openTask, useOpenTask } from "./open-task";
@@ -19,9 +20,9 @@ import { MarkdownField } from "./markdown";
 export function TaskSheet() {
   const id = useOpenTask();
   const { data: tasks } = useTasks();
-  const task = tasks.find((t) => t.id === id);
+  const task = tasks.find((x) => x.id === id);
   return (
-    <Dialog open={!!task} onClose={() => openTask(null)} title={task ? "Tarea" : ""} wide>
+    <Dialog open={!!task} onClose={() => openTask(null)} title={task ? t("Tarea", "Task") : ""} wide>
       {task && <TaskEditor key={task.id} task={task} />}
     </Dialog>
   );
@@ -31,14 +32,14 @@ function TaskEditor({ task }: { task: Task }) {
   const { data: tasks } = useTasks();
   const { data: meetings } = useMeetings();
   const [title, setTitle] = useState(task.title);
-  const subs = tasks.filter((t) => t.parent_id === task.id).sort((a, b) => a.sort - b.sort);
+  const subs = tasks.filter((x) => x.parent_id === task.id).sort((a, b) => a.sort - b.sort);
   const meeting = meetings.find((m) => m.id === task.meeting_id);
   const set = (patch: Partial<Task>) => update("tasks", task.id, patch);
 
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
-        <Checkbox done={task.status === "done"} onClick={() => toggleDone(task)} label="Completar" />
+        <Checkbox done={task.status === "done"} onClick={() => toggleDone(task)} label={t("Completar", "Complete")} />
         <textarea
           className="w-full resize-none bg-transparent text-lg font-medium outline-none"
           rows={Math.max(1, Math.ceil(title.length / 50))}
@@ -51,10 +52,10 @@ function TaskEditor({ task }: { task: Task }) {
 
       <TranslationHint task={task} />
       <TaskFields value={task} onChange={set} />
-      {meeting && <p className="text-xs text-muted">Salió de la reunión del {longDate(meeting.date)}.</p>}
+      {meeting && <p className="text-xs text-muted">{t(`Salió de la reunión del ${longDate(meeting.date)}.`, `From the meeting on ${longDate(meeting.date)}.`)}</p>}
 
       <div>
-        <div className="mb-1 text-xs font-medium text-muted">Subtareas</div>
+        <div className="mb-1 text-xs font-medium text-muted">{t("Subtareas", "Subtasks")}</div>
         <div className="-mx-2">
           {subs.map((s) => (
             <SubtaskRow key={s.id} task={s} />
@@ -64,29 +65,29 @@ function TaskEditor({ task }: { task: Task }) {
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-medium text-muted">Links y archivos</div>
+        <div className="mb-1 text-xs font-medium text-muted">{t("Links y archivos", "Links and files")}</div>
         <Attachments meta={{ task_id: task.id, project_id: task.project_id }} filter={(f) => f.task_id === task.id} />
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-medium text-muted">Detalles</div>
-        <MarkdownField value={task.notes_md} onChange={(v) => set({ notes_md: v })} placeholder="Detalles, links, contexto…" rows={4} />
+        <div className="mb-1 text-xs font-medium text-muted">{t("Detalles", "Details")}</div>
+        <MarkdownField value={task.notes_md} onChange={(v) => set({ notes_md: v })} placeholder={t("Detalles, links, contexto…", "Details, links, context…")} rows={4} />
       </div>
 
       <div className="flex justify-between border-t border-line pt-3">
         <button
           className="btn-ghost text-danger"
           onClick={() => {
-            if (confirm("¿Borrar esta tarea?")) {
+            if (confirm(t("¿Borrar esta tarea?", "Delete this task?"))) {
               remove("tasks", task.id);
               openTask(null);
             }
           }}
         >
-          <Trash2 className="size-4" /> Borrar
+          <Trash2 className="size-4" /> {t("Borrar", "Delete")}
         </button>
         <button className="btn-primary" onClick={() => openTask(null)}>
-          Listo
+          {t("Listo", "Done")}
         </button>
       </div>
     </div>
@@ -100,14 +101,14 @@ function SubtaskRow({ task }: { task: Task }) {
       <Checkbox
         done={done}
         onClick={() => update("tasks", task.id, { status: done ? "todo" : "done", done_at: done ? null : new Date().toISOString() })}
-        label="Completar subtarea"
+        label={t("Completar subtarea", "Complete subtask")}
       />
       <input
         className={`flex-1 bg-transparent text-sm outline-none ${done ? "text-muted line-through" : ""}`}
         defaultValue={task.title}
         onBlur={(e) => e.target.value.trim() && e.target.value !== task.title && update("tasks", task.id, { title: e.target.value.trim() })}
       />
-      <button className="p-1 text-muted opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => remove("tasks", task.id)} aria-label="Borrar subtarea">
+      <button className="p-1 text-muted opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => remove("tasks", task.id)} aria-label={t("Borrar subtarea", "Delete subtask")}>
         <X className="size-4" />
       </button>
     </div>
@@ -127,7 +128,7 @@ function AddSubtask({ parent }: { parent: Task }) {
       }}
     >
       <Plus className="size-4 text-muted" />
-      <input className="flex-1 bg-transparent py-1 text-sm outline-none" placeholder="Agregar subtarea" value={v} onChange={(e) => setV(e.target.value)} />
+      <input className="flex-1 bg-transparent py-1 text-sm outline-none" placeholder={t("Agregar subtarea", "Add subtask")} value={v} onChange={(e) => setV(e.target.value)} />
     </form>
   );
 }

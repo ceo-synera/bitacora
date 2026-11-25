@@ -28,16 +28,18 @@ import { CreateDialogs } from "./create-dialogs";
 import { openCreate } from "./create-store";
 import { useAutoTranslate } from "./auto-translate";
 import { LangToggle } from "./lang-toggle";
+import { t } from "@/lib/i18n";
 
+// Las etiquetas se calculan al dibujar, para que respeten el idioma actual.
 const NAV = [
-  { href: "/", label: "Hoy", icon: Sun },
-  { href: "/bandeja", label: "Bandeja", icon: Inbox },
-  { href: "/tareas", label: "Tareas", icon: ListTodo },
-  { href: "/reuniones", label: "Reuniones", icon: Users2 },
-  { href: "/archivos", label: "Archivos", icon: FolderOpen },
-  { href: "/notas", label: "Notas", icon: NotebookPen },
-  { href: "/proyectos", label: "Proyectos", icon: FolderKanban },
-  { href: "/personas", label: "Personas", icon: Contact },
+  { href: "/", get label() { return t("Hoy", "Today"); }, icon: Sun },
+  { href: "/bandeja", get label() { return t("Bandeja", "Inbox"); }, icon: Inbox },
+  { href: "/tareas", get label() { return t("Tareas", "Tasks"); }, icon: ListTodo },
+  { href: "/reuniones", get label() { return t("Reuniones", "Meetings"); }, icon: Users2 },
+  { href: "/archivos", get label() { return t("Archivos", "Files"); }, icon: FolderOpen },
+  { href: "/notas", get label() { return t("Notas", "Notes"); }, icon: NotebookPen },
+  { href: "/proyectos", get label() { return t("Proyectos", "Projects"); }, icon: FolderKanban },
+  { href: "/personas", get label() { return t("Personas", "People"); }, icon: Contact },
 ];
 
 function useOnline() {
@@ -81,7 +83,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useMembers();
   useAttendees();
   useAutoTranslate();
-  const inboxCount = tasks.filter((t) => t.status === "inbox").length;
+  const inboxCount = tasks.filter((task) => task.status === "inbox").length;
   const online = useOnline();
   const pending = usePendingCount();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -95,7 +97,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <span className="font-semibold">Bitácora</span>
         </div>
         <button onClick={openPalette} className="mx-3 mb-3 flex items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm text-muted hover:bg-soft">
-          <Search className="size-4" /> Buscar
+          <Search className="size-4" /> {t("Buscar", "Search")}
           <kbd className="ml-auto text-xs">⌘K</kbd>
         </button>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
@@ -112,7 +114,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               {href === "/bandeja" && inboxCount > 0 && <span className="ml-auto text-xs">{inboxCount}</span>}
             </Link>
           ))}
-          <div className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-muted">Proyectos</div>
+          <div className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-muted">{t("Proyectos", "Projects")}</div>
           {projects
             .filter((p) => p.status === "active")
             .map((p) => (
@@ -131,7 +133,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-line p-2">
           <div className="flex items-center gap-1">
             <Link href="/ajustes" className="flex flex-1 items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-soft hover:text-ink">
-              <Settings className="size-4" /> Ajustes
+              <Settings className="size-4" /> {t("Ajustes", "Settings")}
             </Link>
             <LangToggle />
           </div>
@@ -144,7 +146,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Logo className="size-6" />
           <span className="font-semibold">Bitácora</span>
           <LangToggle className="ml-auto" />
-          <button onClick={openPalette} className="btn-ghost p-2" aria-label="Buscar">
+          <button onClick={openPalette} className="btn-ghost p-2" aria-label={t("Buscar", "Search")}>
             <Search className="size-5" />
           </button>
         </header>
@@ -152,8 +154,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {(!online || pending > 0) && (
           <div className="flex items-center justify-center gap-2 bg-soft px-4 py-1.5 text-xs text-muted">
             <CloudOff className="size-3.5" />
-            {!online ? "Sin conexión. " : ""}
-            {pending > 0 ? `${pending} ${pending === 1 ? "cambio" : "cambios"} sin subir` : "Mostrando lo último que cargaste"}
+            {!online ? t("Sin conexión. ", "Offline. ") : ""}
+            {pending > 0
+              ? pending === 1
+                ? t("1 cambio sin subir", "1 change not synced")
+                : t(`${pending} cambios sin subir`, `${pending} changes not synced`)
+              : t("Mostrando lo último que cargaste", "Showing what you last loaded")}
           </div>
         )}
 
@@ -164,7 +170,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <button
         onClick={() => openCreate({ kind: "menu" })}
         className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-accent text-accent-ink shadow-lg md:bottom-6 md:right-6"
-        aria-label="Crear"
+        aria-label={t("Crear", "Create")}
       >
         <Plus className="size-6" />
       </button>
@@ -186,18 +192,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
         ))}
         <button onClick={() => setMoreOpen(true)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted">
           <Menu className="size-5" />
-          Más
+          {t("Más", "More")}
         </button>
       </nav>
 
-      <Dialog open={moreOpen} onClose={() => setMoreOpen(false)} title="Más">
+      <Dialog open={moreOpen} onClose={() => setMoreOpen(false)} title={t("Más", "More")}>
         <div className="grid gap-1">
-          {[...NAV.slice(4), { href: "/ajustes", label: "Ajustes", icon: Settings }].map(({ href, label, icon: Icon }) => (
+          {[...NAV.slice(4), { href: "/ajustes", label: t("Ajustes", "Settings"), icon: Settings }].map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-soft">
               <Icon className="size-5 text-muted" /> {label}
             </Link>
           ))}
-          <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-muted">Proyectos</div>
+          <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-muted">{t("Proyectos", "Projects")}</div>
           {projects
             .filter((p) => p.status === "active")
             .map((p) => (

@@ -8,6 +8,8 @@ import { useFiles, useMeetings, useNotes, usePeople, useProjects, useTasks } fro
 import { openCreate } from "./create-store";
 import { longDate } from "@/lib/dates";
 import { openTask } from "./open-task";
+import { getLang, t } from "@/lib/i18n";
+import { shown } from "@/lib/translation";
 
 let open = false;
 const ls = new Set<() => void>();
@@ -76,7 +78,7 @@ export function CommandPalette() {
       open={isOpen}
       onOpenChange={(v) => (v ? setOpen(true) : close())}
       filter={filter}
-      label="Buscar"
+      label={t("Buscar", "Search")}
       overlayClassName="fixed inset-0 z-50 bg-black/40"
       contentClassName="fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-xl md:top-[12vh]"
       className="overflow-hidden border border-line bg-panel shadow-2xl md:rounded-2xl"
@@ -84,51 +86,51 @@ export function CommandPalette() {
       <Command.Input
         value={q}
         onValueChange={setQ}
-        placeholder="Buscar tareas, notas, reuniones, archivos…"
+        placeholder={t("Buscar tareas, notas, reuniones, archivos…", "Search tasks, notes, meetings, files…")}
         className="pt-safe w-full border-b border-line bg-transparent px-4 py-3 text-base outline-none"
       />
       <Command.List className={`max-h-[70dvh] overflow-y-auto p-2 ${heading}`}>
-        <Command.Empty className="px-3 py-6 text-center text-sm text-muted">Nada por acá.</Command.Empty>
-        <Command.Group heading="Crear">
+        <Command.Empty className="px-3 py-6 text-center text-sm text-muted">{t("Nada por acá.", "Nothing here.")}</Command.Empty>
+        <Command.Group heading={t("Crear", "Create")}>
           {(
             [
-              ["Nueva tarea", () => openCreate({ kind: "task" })],
-              ["Nueva persona", () => openCreate({ kind: "person" })],
-              ["Nuevo proyecto", () => openCreate({ kind: "project" })],
+              ["Nueva tarea", "New task", () => openCreate({ kind: "task" })],
+              ["Nueva persona", "New person", () => openCreate({ kind: "person" })],
+              ["Nuevo proyecto", "New project", () => openCreate({ kind: "project" })],
             ] as const
-          ).map(([label, run]) => (
-            <Command.Item key={label} value={`crear ${label}`} onSelect={() => (close(), run())} className={item}>
-              <Plus className="size-4 text-muted" /> {label}
+          ).map(([label, en, run]) => (
+            <Command.Item key={label} value={`crear ${label}`} keywords={["create", en]} onSelect={() => (close(), run())} className={item}>
+              <Plus className="size-4 text-muted" /> {t(label, en)}
             </Command.Item>
           ))}
         </Command.Group>
-        <Command.Group heading="Ir a">
+        <Command.Group heading={t("Ir a", "Go to")}>
           {[
-            ["Hoy", "/"],
-            ["Bandeja", "/bandeja"],
-            ["Tareas", "/tareas"],
-            ["Reuniones", "/reuniones"],
-            ["Archivos", "/archivos"],
-            ["Notas", "/notas"],
-            ["Proyectos", "/proyectos"],
-            ["Personas", "/personas"],
-            ["Ajustes", "/ajustes"],
-          ].map(([label, href]) => (
-            <Command.Item key={href} value={`ir ${label}`} onSelect={() => go(href)} className={item}>
-              <ArrowRight className="size-4 text-muted" /> {label}
+            ["Hoy", "Today", "/"],
+            ["Bandeja", "Inbox", "/bandeja"],
+            ["Tareas", "Tasks", "/tareas"],
+            ["Reuniones", "Meetings", "/reuniones"],
+            ["Archivos", "Files", "/archivos"],
+            ["Notas", "Notes", "/notas"],
+            ["Proyectos", "Projects", "/proyectos"],
+            ["Personas", "People", "/personas"],
+            ["Ajustes", "Settings", "/ajustes"],
+          ].map(([label, en, href]) => (
+            <Command.Item key={href} value={`ir ${label}`} keywords={["go", en]} onSelect={() => go(href)} className={item}>
+              <ArrowRight className="size-4 text-muted" /> {t(label, en)}
             </Command.Item>
           ))}
         </Command.Group>
         {q.trim() && (
         <>
-        <Command.Group heading="Proyectos">
+        <Command.Group heading={t("Proyectos", "Projects")}>
           {projects.map((p) => (
             <Command.Item key={p.id} value={`proyecto ${p.id}`} keywords={[p.name]} onSelect={() => go(`/proyectos/${p.id}`)} className={item}>
               <FolderKanban className="size-4 text-muted" /> {p.name}
             </Command.Item>
           ))}
         </Command.Group>
-        <Command.Group heading="Personas">
+        <Command.Group heading={t("Personas", "People")}>
           {people.map((p) => (
             <Command.Item key={p.id} value={`persona ${p.id}`} keywords={[p.name, p.role ?? "", p.team ?? "", p.email ?? ""]} onSelect={() => go(`/personas/${p.id}`)} className={item}>
               <Contact className="size-4 text-muted" /> {p.name}
@@ -136,34 +138,34 @@ export function CommandPalette() {
             </Command.Item>
           ))}
         </Command.Group>
-        <Command.Group heading="Tareas">
+        <Command.Group heading={t("Tareas", "Tasks")}>
           {tasks
-            .filter((t) => !t.parent_id)
-            .map((t) => (
+            .filter((task) => !task.parent_id)
+            .map((task) => (
               <Command.Item
-                key={t.id}
-                value={`tarea ${t.id}`}
-                keywords={[t.title, t.notes_md, t.translations?.es?.title ?? "", t.translations?.en?.title ?? ""]}
+                key={task.id}
+                value={`tarea ${task.id}`}
+                keywords={[task.title, task.notes_md, task.translations?.es?.title ?? "", task.translations?.en?.title ?? ""]}
                 onSelect={() => {
                   close();
-                  openTask(t.id);
+                  openTask(task.id);
                 }}
                 className={item}
               >
                 <CheckSquare className="size-4 shrink-0 text-muted" />
-                <span className={`truncate ${t.status === "done" ? "text-muted line-through" : ""}`}>{t.title}</span>
+                <span className={`truncate ${task.status === "done" ? "text-muted line-through" : ""}`}>{shown(task, getLang()).title}</span>
               </Command.Item>
             ))}
         </Command.Group>
-        <Command.Group heading="Notas">
+        <Command.Group heading={t("Notas", "Notes")}>
           {notes.map((n) => (
             <Command.Item key={n.id} value={`nota ${n.id}`} keywords={[n.title, n.body_md]} onSelect={() => go(`/notas/${n.id}`)} className={item}>
               <NotebookPen className="size-4 shrink-0 text-muted" />
-              <span className="truncate">{n.title || "Sin título"}</span>
+              <span className="truncate">{n.title || t("Sin título", "Untitled")}</span>
             </Command.Item>
           ))}
         </Command.Group>
-        <Command.Group heading="Reuniones">
+        <Command.Group heading={t("Reuniones", "Meetings")}>
           {meetings.map((m) => (
             <Command.Item
               key={m.id}
@@ -174,12 +176,12 @@ export function CommandPalette() {
             >
               <Users2 className="size-4 shrink-0 text-muted" />
               <span className="truncate">
-                {m.title || "Reunión"} · {longDate(m.date)}
+                {m.title || t("Reunión", "Meeting")} · {longDate(m.date)}
               </span>
             </Command.Item>
           ))}
         </Command.Group>
-        <Command.Group heading="Archivos">
+        <Command.Group heading={t("Archivos", "Files")}>
           {files.map((f) => (
             <Command.Item key={f.id} value={`archivo ${f.id}`} keywords={[f.name]} onSelect={() => go(`/archivos/${f.id}`)} className={item}>
               <FileText className="size-4 shrink-0 text-muted" />

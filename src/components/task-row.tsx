@@ -5,7 +5,8 @@ import { useFiles, usePeople, useProjects, useTasks } from "@/lib/db";
 import { toggleDone } from "@/lib/actions";
 import { humanDate, shortTime, today } from "@/lib/dates";
 import type { Task } from "@/lib/types";
-import { useLang, t as tr } from "@/lib/i18n";
+import { t as tr } from "@/lib/i18n";
+import { useLang } from "@/lib/use-lang";
 import { shown } from "@/lib/translation";
 import { Languages } from "lucide-react";
 import { openTask } from "./open-task";
@@ -46,8 +47,8 @@ export function TaskRow({
   const nFiles = files.filter((f) => f.task_id === task.id).length;
   const project = projects.find((p) => p.id === task.project_id);
   const person = people.find((p) => p.id === task.assignee_id);
-  const subs = tasks.filter((t) => t.parent_id === task.id);
-  const subsDone = subs.filter((t) => t.status === "done").length;
+  const subs = tasks.filter((s) => s.parent_id === task.id);
+  const subsDone = subs.filter((s) => s.status === "done").length;
   const lang = useLang();
   const view = shown(task, lang);
   const done = task.status === "done";
@@ -63,7 +64,7 @@ export function TaskRow({
       onClick={() => openTask(task.id)}
       className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-soft"
     >
-      <Checkbox done={done} onClick={() => toggleDone(task)} label={done ? "Reabrir" : "Completar"} />
+      <Checkbox done={done} onClick={() => toggleDone(task)} label={done ? tr("Reabrir", "Reopen") : tr("Completar", "Complete")} />
       <div className="min-w-0 flex-1">
         <div className={`text-[15px] leading-snug md:text-sm ${done ? "text-muted line-through" : ""}`}>
           {task.priority === "high" && !done && <ArrowUp className="mr-0.5 inline size-3.5 text-danger" />}
@@ -87,7 +88,7 @@ export function TaskRow({
               {shortTime(task.due_time)}
             </span>
           )}
-          {task.recurrence && <Repeat className="size-3" aria-label="Se repite" />}
+          {task.recurrence && <Repeat className="size-3" aria-label={tr("Se repite", "Repeats")} />}
           {showProject && project && (
             <span className="inline-flex items-center gap-1">
               <ProjectDot color={project.color} />
@@ -100,8 +101,8 @@ export function TaskRow({
               {person.name}
             </span>
           )}
-          {task.status === "waiting" && <span className="chip">esperando</span>}
-          {task.status === "doing" && <span className="chip">en curso</span>}
+          {task.status === "waiting" && <span className="chip">{tr("esperando", "waiting")}</span>}
+          {task.status === "doing" && <span className="chip">{tr("en curso", "in progress")}</span>}
           {nFiles > 0 && (
             <span className="inline-flex items-center gap-0.5">
               <Paperclip className="size-3" />
