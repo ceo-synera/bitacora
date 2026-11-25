@@ -28,7 +28,8 @@ export default function HoyPage() {
 
   const waitingByPerson = new Map<string, Task[]>();
   for (const t of waiting) {
-    const k = people.find((p) => p.id === t.assignee_id)?.name ?? "Sin responsable";
+    // Sin responsable = tuya: la marcaste "Esperando" porque dependés de otro.
+    const k = people.find((p) => p.id === t.assignee_id)?.name ?? "Yo (esperando respuesta)";
     waitingByPerson.set(k, [...(waitingByPerson.get(k) ?? []), t]);
   }
 
