@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { insert, useFiles, useMeetings, usePeople, useProjects } from "@/lib/db";
+import { insert, useFiles, useMeetings, usePeople, useProjects, useTasks } from "@/lib/db";
 import { signedUrl, uploadFile } from "@/lib/files";
 import { readSheet, rowsToObjects, type Workbook } from "@/lib/sheets";
-import { findByName, guessMapping, IMPORT_FIELDS, mapRows, type Mapping } from "@/lib/importer";
+import { findByName, findDuplicate, guessMapping, IMPORT_FIELDS, isMe, mapRows, type Mapping } from "@/lib/importer";
 import { humanDate, longDate } from "@/lib/dates";
 import { COLORS, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/types";
 import { toast } from "@/lib/toast";
@@ -26,6 +26,7 @@ export default function ImportarPage() {
   const [meetingId] = useState<string | null>(() => (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("reunion") : null));
   const [saveFile, setSaveFile] = useState(true);
   const [skipDone, setSkipDone] = useState(false);
+  const [includeSimilar, setIncludeSimilar] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
 
   const loadingFile = useRef(false);
@@ -59,17 +60,30 @@ export default function ImportarPage() {
     setSheet(w.sheetNames[0]);
     setHeaderRow(0);
     setMapping(null);
+    setIncludeSimilar(new Set());
   }
 
   const table = useMemo(() => (wb ? rowsToObjects(wb.sheets[sheet] ?? [], headerRow) : null), [wb, sheet, headerRow]);
   const mapping = useMemo(() => mappingOverride ?? (table ? guessMapping(table.headers) : {}), [mappingOverride, table]);
 
-  const mapped = useMemo(() => {
-    const all = table && mapping.title ? mapRows(table.rows, mapping) : [];
-    return skipDone ? all.filter((t) => t.status !== "done") : all;
-  }, [table, mapping, skipDone]);
   const { data: people } = usePeople();
   const { data: projects } = useProjects();
+  const { data: tasks } = useTasks();
+  const rows = useMemo(() => {
+    const all = table && mapping.title ? mapRows(table.rows, mapping) : [];
+    // "Nicolás", "yo", "me"… = vos: sin responsable.
+    return (skipDone ? all.filter((t) => t.status !== "done") : all).map((t) => (isMe(t.assignee) ? { ...t, assignee: null } : t));
+  }, [table, mapping, skipDone]);
+  // Duplicados contra lo que ya está cargado (también la misma tarea escrita en otro idioma).
+  const dups = useMemo(() => {
+    const existing = tasks
+      .filter((t) => !t.parent_id)
+      .map((t) => ({ id: t.id, title: t.title, assignee: people.find((p) => p.id === t.assignee_id)?.name ?? null, due_date: t.due_date, done: t.status === "done" }));
+    const names = people.map((p) => p.name);
+    return rows.map((t) => findDuplicate(t, existing, names));
+  }, [rows, tasks, people]);
+  const mapped = rows.filter((_, i) => !dups[i] || (dups[i]!.kind === "parecida" && includeSimilar.has(i)));
+  const nSkipped = rows.length - mapped.length;
   const newPeople = [...new Set(mapped.map((t) => t.assignee).filter((a): a is string => !!a && !findByName(people, a)))];
   const newProjects = [...new Set(mapped.map((t) => t.project).filter((p): p is string => !!p && !findByName(projects, p)))];
 
@@ -173,7 +187,7 @@ export default function ImportarPage() {
             </label>
           </Section>
 
-          <Section title={`3 · Vista previa · ${mapped.length} tareas`}>
+          <Section title={`3 · Vista previa · ${mapped.length} para importar${nSkipped ? ` · ${nSkipped} ya existen` : ""}`}>
             {!mapping.title ? (
               <p className="text-sm text-danger">Elegí qué columna es el título.</p>
             ) : (
@@ -190,7 +204,7 @@ export default function ImportarPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-soft text-left text-muted">
                       <tr>
-                        {["Título", "Responsable", "Fecha", "Estado", "Prioridad", "Proyecto"].map((h) => (
+                        {["", "Título", "Responsable", "Fecha", "Estado", "Prioridad", "Proyecto"].map((h) => (
                           <th key={h} className="px-3 py-2 font-medium">
                             {h}
                           </th>
@@ -198,20 +212,50 @@ export default function ImportarPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
-                      {mapped.slice(0, 100).map((t, i) => (
-                        <tr key={i}>
-                          <td className="max-w-80 px-3 py-1.5">{t.title}</td>
+                      {rows.slice(0, 200).map((t, i) => {
+                        const dup = dups[i];
+                        const on = !dup || (dup.kind === "parecida" && includeSimilar.has(i));
+                        return (
+                        <tr key={i} className={on ? "" : "text-muted"}>
+                          <td className="px-3 py-1.5">
+                            <input
+                              type="checkbox"
+                              checked={on}
+                              disabled={dup?.kind === "igual"}
+                              title={dup ? `Ya existe: ${dup.title}` : "Importar"}
+                              onChange={(e) => {
+                                const s = new Set(includeSimilar);
+                                if (e.target.checked) s.add(i);
+                                else s.delete(i);
+                                setIncludeSimilar(s);
+                              }}
+                            />
+                          </td>
+                          <td className="max-w-80 px-3 py-1.5">
+                            <span className={on ? "" : "line-through"}>{t.title}</span>
+                            {dup && (
+                              <span className="block text-[11px] text-danger">
+                                {dup.kind === "igual" ? "Ya existe" : "Parece la misma que"}: {dup.title}
+                              </span>
+                            )}
+                          </td>
                           <td className="px-3 py-1.5">{t.assignee ?? "Yo"}</td>
                           <td className="whitespace-nowrap px-3 py-1.5">{t.due_date ? humanDate(t.due_date) : "—"}</td>
                           <td className="px-3 py-1.5">{STATUS_LABEL[t.status]}</td>
                           <td className="px-3 py-1.5">{PRIORITY_LABEL[t.priority]}</td>
                           <td className="px-3 py-1.5">{t.project ?? projects.find((p) => p.id === projectId)?.name ?? "—"}</td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
-                {mapped.length > 100 && <p className="mt-1 text-xs text-muted">Mostrando 100 de {mapped.length}.</p>}
+                {rows.length > 200 && <p className="mt-1 text-xs text-muted">Mostrando 200 de {rows.length}.</p>}
+                {nSkipped > 0 && (
+                  <p className="mt-2 text-xs text-muted">
+                    Las que ya existen no se importan. Si una marcada como «parecida» es en realidad otra tarea, tildala para importarla igual.
+                  </p>
+                )}
               </>
             )}
           </Section>
