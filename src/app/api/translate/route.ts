@@ -19,13 +19,17 @@ export async function POST(req: Request) {
   const ids = (body?.ids ?? []).slice(0, 40);
   if (!to || !ids.length) return Response.json({ error: "Faltan datos" }, { status: 400 });
 
+  // Un lector puede pedir traducciones de las tareas del dueño que ve.
+  const { data: owners } = await db.from("viewers").select("owner_id").eq("user_id", auth.user.id);
+  const ownerIds = [auth.user.id, ...(owners ?? []).map((o) => o.owner_id)];
   const { data: tasks, error } = await db
     .from("tasks")
     .select("id, title, notes_md, lang, translations")
-    .eq("owner_id", auth.user.id)
+    .in("owner_id", ownerIds)
     .in("id", ids);
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
+  if (!tasks.length) return Response.json({ results: [] });
   try {
     const out = await translateItems(
       tasks.map((t) => ({ id: t.id, title: t.title, notes: t.notes_md })),
