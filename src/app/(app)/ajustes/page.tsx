@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, BellOff, FileUp, LogOut, Trash2, Send, Users } from "lucide-react";
+import { Bell, BellOff, Eye, FileUp, LogOut, Trash2, Send, Users } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { currentSubscription, disablePush, enablePush, isStandalone, pushSupported, sendTestPush } from "@/lib/push";
@@ -12,8 +12,10 @@ import { PageHeader, Section } from "@/components/ui";
 import { useSession } from "@/components/auth-gate";
 import { LangToggle } from "@/components/lang-toggle";
 import { t } from "@/lib/i18n";
+import { useReadOnly } from "@/lib/use-role";
 
 export default function AjustesPage() {
+  const readOnly = useReadOnly();
   return (
     <div className="max-w-2xl">
       <PageHeader title={t("Ajustes", "Settings")} />
@@ -23,7 +25,10 @@ export default function AjustesPage() {
           <LangToggle />
         </div>
       </Section>
-      <Notifications />
+      {!readOnly && <Notifications />}
+      {!readOnly && <Viewers />}
+      {!readOnly && (
+      <>
       <Section title={t("Personas", "People")}>
         <Link href="/personas" className="btn-outline">
           <Users className="size-4" /> {t("Ver y editar personas", "View and edit people")}
@@ -34,6 +39,8 @@ export default function AjustesPage() {
           <FileUp className="size-4" /> {t("Importar tareas desde CSV o Excel", "Import tasks from CSV or Excel")}
         </Link>
       </Section>
+      </>
+      )}
       <Account />
     </div>
   );
@@ -157,6 +164,109 @@ function Account() {
         >
           <LogOut className="size-4" /> {t("Salir", "Sign out")}
         </button>
+      </div>
+    </Section>
+  );
+}
+
+/** Cuentas de solo lectura (por ejemplo, para que el equipo de PainPoint vea la app). */
+function Viewers() {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const { data: viewers = [] } = useQuery({
+    queryKey: ["viewers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("viewers").select("email, user_id, created_at").order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  async function call(method: "POST" | "DELETE", body: object) {
+    setBusy(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch("/api/viewers", {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token}` },
+        body: JSON.stringify(body),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error ?? `Error ${res.status}`);
+      return out as { updated?: boolean };
+    } finally {
+      setBusy(false);
+      qc.invalidateQueries({ queryKey: ["viewers"] });
+    }
+  }
+
+  return (
+    <Section title={t("Lectores (solo lectura)", "Viewers (read-only)")}>
+      <div className="card space-y-3 p-4 text-sm">
+        <p className="text-muted">
+          {t(
+            "Ven todo lo que ves vos (tareas, reuniones, personas, archivos), pero no pueden cambiar nada. Entran con su mail y la contraseña que pongas acá; pasásela por un canal privado.",
+            "They see everything you see (tasks, meetings, people, files) but can't change anything. They sign in with their email and the password you set here; share it privately.",
+          )}
+        </p>
+        {viewers.length > 0 && (
+          <ul className="divide-y divide-line rounded-lg border border-line">
+            {viewers.map((v) => (
+              <li key={v.email} className="flex items-center gap-2 px-3 py-2">
+                <Eye className="size-4 text-muted" />
+                <span className="flex-1">{v.email}</span>
+                <button
+                  className="p-1 text-muted hover:text-danger"
+                  aria-label={t("Quitar acceso", "Remove access")}
+                  disabled={busy}
+                  onClick={async () => {
+                    if (!confirm(t(`¿Quitarle el acceso a ${v.email}?`, `Remove access for ${v.email}?`))) return;
+                    try {
+                      await call("DELETE", { email: v.email });
+                      toast(t("Acceso quitado", "Access removed"));
+                    } catch (e) {
+                      toast((e as Error).message, "error");
+                    }
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form
+          className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              const r = await call("POST", { email, password });
+              toast(r.updated ? t("Contraseña actualizada", "Password updated") : t(`Listo: ${email} ya puede entrar`, `Done: ${email} can sign in now`));
+              setEmail("");
+              setPassword("");
+            } catch (err) {
+              toast((err as Error).message, "error");
+            }
+          }}
+        >
+          <input className="input" type="email" placeholder={t("Mail del lector", "Viewer's email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            className="input"
+            type="text"
+            autoComplete="off"
+            placeholder={t("Contraseña (mín. 10)", "Password (min. 10)")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={10}
+            required
+          />
+          <button className="btn-primary" disabled={busy}>
+            {t("Dar acceso", "Give access")}
+          </button>
+        </form>
+        <p className="text-xs text-muted">{t("Si el mail ya es lector, se le cambia la contraseña.", "If the email is already a viewer, its password is changed.")}</p>
       </div>
     </Section>
   );

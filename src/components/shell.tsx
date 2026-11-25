@@ -17,6 +17,7 @@ import {
   CloudOff,
   FolderKanban,
   Contact,
+  Eye,
 } from "lucide-react";
 import { useAttendees, useFiles, useMembers, useMeetings, useNotes, usePendingCount, usePeople, useProjects, useTasks } from "@/lib/db";
 import { Logo } from "./logo";
@@ -26,6 +27,8 @@ import { CommandPalette, openPalette } from "./command-palette";
 import { Dialog } from "./ui";
 import { CreateDialogs } from "./create-dialogs";
 import { openCreate } from "./create-store";
+import { isReadOnly } from "@/lib/role";
+import { useReadOnly } from "@/lib/use-role";
 import { useAutoTranslate } from "./auto-translate";
 import { LangToggle } from "./lang-toggle";
 import { t } from "@/lib/i18n";
@@ -60,11 +63,12 @@ function useOnline() {
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  const readOnly = useReadOnly();
   useEffect(() => {
     // Tecla "c" (fuera de un campo de texto): abrir Crear.
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
-      if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey && !/INPUT|TEXTAREA|SELECT/.test(el.tagName) && !el.isContentEditable) {
+      if (e.key === "c" && !isReadOnly() && !e.metaKey && !e.ctrlKey && !e.altKey && !/INPUT|TEXTAREA|SELECT/.test(el.tagName) && !el.isContentEditable) {
         e.preventDefault();
         openCreate({ kind: "menu" });
       }
@@ -151,6 +155,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </button>
         </header>
 
+        {readOnly && (
+          <div className="flex items-center justify-center gap-2 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent">
+            <Eye className="size-3.5" />
+            {t("Solo lectura: podés mirar todo, pero no se guardan cambios.", "Read-only: you can look around, but changes aren't saved.")}
+          </div>
+        )}
+
         {(!online || pending > 0) && (
           <div className="flex items-center justify-center gap-2 bg-soft px-4 py-1.5 text-xs text-muted">
             <CloudOff className="size-3.5" />
@@ -167,6 +178,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Botón de captura */}
+      {!readOnly && (
       <button
         onClick={() => openCreate({ kind: "menu" })}
         className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-accent text-accent-ink shadow-lg md:bottom-6 md:right-6"
@@ -174,6 +186,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       >
         <Plus className="size-6" />
       </button>
+      )}
 
       {/* Navegación inferior (celular) */}
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-panel md:hidden">

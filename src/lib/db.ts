@@ -7,6 +7,7 @@ import { useSyncExternalStore } from "react";
 import { supabase } from "./supabase";
 import { toast } from "./toast";
 import { t } from "./i18n";
+import { isReadOnly } from "./role";
 import type { TableName, Tables } from "./types";
 
 /*
@@ -143,6 +144,11 @@ if (typeof window !== "undefined") {
 }
 
 function enqueue(op: Op) {
+  // Cuenta de solo lectura: no se aplica ni se guarda nada.
+  if (isReadOnly()) {
+    toast(t("Cuenta de solo lectura: no se guardan cambios.", "Read-only account: changes aren't saved."), "error");
+    return;
+  }
   queryClient.setQueryData<Tables[TableName][]>([op.table], (rows = []) => applyOp(rows, op));
   outbox.push(op);
   saveOutbox().then(() => flush());
