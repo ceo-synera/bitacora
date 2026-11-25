@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { t } from "@/lib/i18n";
 
 export default function ResetPage() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function ResetPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 10) return setError("Usá al menos 10 caracteres.");
-    if (password !== password2) return setError("Las contraseñas no coinciden.");
+    if (password.length < 10) return setError(t("Usá al menos 10 caracteres.", "Use at least 10 characters."));
+    if (password !== password2) return setError(t("Las contraseñas no coinciden.", "Passwords don't match."));
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
@@ -39,24 +40,24 @@ export default function ResetPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center px-4">
       <form onSubmit={onSubmit} className="card w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-xl font-semibold">Elegí tu contraseña</h1>
+        <h1 className="text-xl font-semibold">{t("Elegí tu contraseña", "Choose your password")}</h1>
         {linkError && !ready ? (
           <div className="space-y-3 text-sm">
-            <p className="text-danger">Este link ya no sirve (venció o ya se usó).</p>
-            <p className="text-muted">Pedí uno nuevo desde la pantalla de entrada: escribí tu mail y tocá «Olvidé mi contraseña».</p>
+            <p className="text-danger">{t("Este link ya no sirve (venció o ya se usó).", "This link no longer works (it expired or was already used).")}</p>
+            <p className="text-muted">{t("Pedí uno nuevo desde la pantalla de entrada: escribí tu mail y tocá «Olvidé mi contraseña».", "Request a new one from the sign-in screen: enter your email and tap «Forgot my password».")}</p>
             <a href="/login" className="btn-primary w-full">
-              Ir a la entrada
+              {t("Ir a la entrada", "Go to sign in")}
             </a>
           </div>
         ) : !ready ? (
-          <p className="text-sm text-muted">Validando el link…</p>
+          <p className="text-sm text-muted">{t("Validando el link…", "Checking the link…")}</p>
         ) : (
           <>
             <input
               className="input"
               type="password"
               autoComplete="new-password"
-              placeholder="Contraseña nueva"
+              placeholder={t("Contraseña nueva", "New password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -64,13 +65,13 @@ export default function ResetPage() {
               className="input"
               type="password"
               autoComplete="new-password"
-              placeholder="Repetila"
+              placeholder={t("Repetila", "Repeat it")}
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
             />
             {error && <p className="text-sm text-danger">{error}</p>}
             <button className="btn-primary w-full" disabled={busy}>
-              Guardar y entrar
+              {t("Guardar y entrar", "Save and sign in")}
             </button>
           </>
         )}

@@ -20,6 +20,7 @@ import { MarkdownField } from "@/components/markdown";
 import { ProjectSelect } from "@/components/pickers";
 import { classifyMeetingPdf } from "@/lib/meeting-pdf";
 import { Attendees } from "@/components/attendees";
+import { t } from "@/lib/i18n";
 
 export default function MeetingPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,11 +31,11 @@ export default function MeetingPage() {
   const [busy, setBusy] = useState(false);
   const m = meetings.find((x) => x.id === id);
 
-  if (!m) return <Empty>{isFetched ? "No encontré esa reunión." : "Cargando…"}</Empty>;
+  if (!m) return <Empty>{isFetched ? t("No encontré esa reunión.", "Meeting not found.") : t("Cargando…", "Loading…")}</Empty>;
 
   const mf = files.filter((f) => f.meeting_id === m.id);
   const byRole = (r: string) => mf.find((f) => f.role === r);
-  const mt = tasks.filter((t) => t.meeting_id === m.id && !t.parent_id).sort((a, b) => a.sort - b.sort);
+  const mt = tasks.filter((task) => task.meeting_id === m.id && !task.parent_id).sort((a, b) => a.sort - b.sort);
 
   async function onFiles(list: File[]) {
     setBusy(true);
@@ -44,7 +45,7 @@ export default function MeetingPage() {
       const rest = list.filter((f) => !known.includes(f));
       if (known.length) await uploadMeetingPdfs(known, m);
       for (const f of rest) await uploadFile(f, { project_id: m!.project_id, meeting_id: m!.id });
-      toast("Subido");
+      toast(t("Subido", "Uploaded"));
     } catch (e) {
       toast((e as Error).message, "error");
     }
@@ -54,14 +55,14 @@ export default function MeetingPage() {
   return (
     <div className="max-w-3xl">
       <Link href="/reuniones" className="text-sm text-muted hover:text-ink">
-        ← Reuniones
+        ← {t("Reuniones", "Meetings")}
       </Link>
       <div className="mb-4 mt-1">
         <p className="text-sm text-muted">{longDate(m.date)}</p>
         <input
           className="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none"
           defaultValue={m.title}
-          placeholder="Título"
+          placeholder={t("Título", "Title")}
           onBlur={(e) => e.target.value !== m.title && update("meetings", m.id, { title: e.target.value })}
         />
         <div className="mt-2 flex flex-wrap gap-2 text-sm">
@@ -71,16 +72,16 @@ export default function MeetingPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {byRole("agenda") && <FileOpenButton file={byRole("agenda")!} icon={<FileText className="size-4" />} label="Agenda" />}
-        {byRole("presentation") && <FileOpenButton file={byRole("presentation")!} icon={<Presentation className="size-4" />} label="Presentación" primary />}
-        {byRole("minutes") && <FileOpenButton file={byRole("minutes")!} icon={<ScrollText className="size-4" />} label="Minuta" />}
+        {byRole("agenda") && <FileOpenButton file={byRole("agenda")!} icon={<FileText className="size-4" />} label={t("Agenda", "Agenda")} />}
+        {byRole("presentation") && <FileOpenButton file={byRole("presentation")!} icon={<Presentation className="size-4" />} label={t("Presentación", "Presentation")} primary />}
+        {byRole("minutes") && <FileOpenButton file={byRole("minutes")!} icon={<ScrollText className="size-4" />} label={t("Minuta", "Minutes")} />}
       </div>
 
-      <Section title="Asistentes">
+      <Section title={t("Asistentes", "Attendees")}>
         <Attendees meetingId={m.id} projectId={m.project_id} />
       </Section>
 
-      <Section title="Archivos" count={mf.length}>
+      <Section title={t("Archivos", "Files")} count={mf.length}>
         {mf.length > 0 && (
           <div className="mb-2">
             <FileList files={mf} showProject={false} />
@@ -88,35 +89,35 @@ export default function MeetingPage() {
         )}
         <div className="flex flex-wrap gap-2">
           <div className="flex-1">
-            <FileDrop onFiles={onFiles} busy={busy} compact label="Subir agenda, presentación, minuta u otro archivo" />
+            <FileDrop onFiles={onFiles} busy={busy} compact label={t("Subir agenda, presentación, minuta u otro archivo", "Upload agenda, presentation, minutes or another file")} />
           </div>
           <AddLinkButton meta={{ project_id: m.project_id, meeting_id: m.id }} />
         </div>
       </Section>
 
-      <Section title="Notas">
-        <MarkdownField value={m.notes_md} onChange={(v) => update("meetings", m.id, { notes_md: v })} placeholder="Lo que se habló…" rows={8} />
+      <Section title={t("Notas", "Notes")}>
+        <MarkdownField value={m.notes_md} onChange={(v) => update("meetings", m.id, { notes_md: v })} placeholder={t("Lo que se habló…", "What was discussed…")} rows={8} />
         <input
           className="input mt-2 text-sm"
-          placeholder="Link de la grabación (opcional)"
+          placeholder={t("Link de la grabación (opcional)", "Recording link (optional)")}
           defaultValue={m.recording_url ?? ""}
           onBlur={(e) => e.target.value !== (m.recording_url ?? "") && update("meetings", m.id, { recording_url: e.target.value || null })}
         />
         {m.recording_url && (
           <a href={m.recording_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-accent underline">
-            Abrir grabación
+            {t("Abrir grabación", "Open recording")}
           </a>
         )}
       </Section>
 
-      <Section title="Tareas que salieron" count={mt.length}>
-        {mt.length > 0 ? <TaskList tasks={mt} /> : <Empty>Todavía ninguna.</Empty>}
+      <Section title={t("Tareas que salieron", "Resulting tasks")} count={mt.length}>
+        {mt.length > 0 ? <TaskList tasks={mt} /> : <Empty>{t("Todavía ninguna.", "None yet.")}</Empty>}
         <div className="mt-2 flex flex-wrap gap-2">
           <div className="min-w-60 flex-1">
             <QuickAdd defaults={{ meeting_id: m.id, project_id: m.project_id }} />
           </div>
           <Link href={`/ajustes/importar?reunion=${m.id}`} className="btn-outline">
-            <FileUp className="size-4" /> Importar CSV
+            <FileUp className="size-4" /> {t("Importar CSV", "Import CSV")}
           </Link>
         </div>
       </Section>
@@ -124,13 +125,13 @@ export default function MeetingPage() {
       <button
         className="btn-ghost text-danger"
         onClick={() => {
-          if (confirm("¿Borrar la reunión? Las tareas y archivos quedan, pero sueltos.")) {
+          if (confirm(t("¿Borrar la reunión? Las tareas y archivos quedan, pero sueltos.", "Delete the meeting? Its tasks and files are kept, but unlinked."))) {
             remove("meetings", m.id);
             router.replace("/reuniones");
           }
         }}
       >
-        <Trash2 className="size-4" /> Borrar reunión
+        <Trash2 className="size-4" /> {t("Borrar reunión", "Delete meeting")}
       </button>
     </div>
   );

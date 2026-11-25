@@ -12,6 +12,7 @@ import { Empty, PageHeader } from "@/components/ui";
 import { FileDrop } from "@/components/dropzone";
 import { ProjectDot } from "@/components/pickers";
 import { AttendeeFaces } from "@/components/attendees";
+import { t } from "@/lib/i18n";
 
 export default function ReunionesPage() {
   const router = useRouter();
@@ -26,8 +27,8 @@ export default function ReunionesPage() {
     setBusy(true);
     try {
       const { done, skipped } = await uploadMeetingPdfs(list);
-      if (done.length) toast(`Listo: ${done.join(", ")}`);
-      if (skipped.length) toast(`No reconocí: ${skipped.join(", ")}`, "error");
+      if (done.length) toast(t(`Listo: ${done.join(", ")}`, `Done: ${done.join(", ")}`));
+      if (skipped.length) toast(t(`No reconocí: ${skipped.join(", ")}`, `Not recognized: ${skipped.join(", ")}`), "error");
     } catch (e) {
       toast(String((e as Error).message), "error");
     }
@@ -44,32 +45,34 @@ export default function ReunionesPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Reuniones">
+      <PageHeader title={t("Reuniones", "Meetings")}>
         <button className="btn-outline" onClick={() => setShowUpload((v) => !v)}>
-          Subir PDFs
+          {t("Subir PDFs", "Upload PDFs")}
         </button>
         <button className="btn-primary" onClick={newMeeting}>
-          <Plus className="size-4" /> Reunión del lunes
+          <Plus className="size-4" /> {t("Reunión del lunes", "Monday meeting")}
         </button>
       </PageHeader>
 
       {showUpload && (
         <div className="mb-6">
-          <FileDrop onFiles={onFiles} busy={busy} accept="application/pdf" label="Soltá la agenda, la presentación o la minuta" />
+          <FileDrop onFiles={onFiles} busy={busy} accept="application/pdf" label={t("Soltá la agenda, la presentación o la minuta", "Drop the agenda, presentation or minutes")} />
           <p className="mt-2 text-xs text-muted">
-            Reconozco «AAAA-MM-DD Agenda AI Funnels Weekly.pdf», «AAAA-MM-DD Presentacion AI Funnels Weekly.pdf» y los que digan «Minuta». Creo la reunión de esa
-            fecha si no existe. Los que empiezan con «OBSOLETA» se ignoran.
+            {t(
+              "Reconozco «AAAA-MM-DD Agenda AI Funnels Weekly.pdf», «AAAA-MM-DD Presentacion AI Funnels Weekly.pdf» y los que digan «Minuta». Creo la reunión de esa fecha si no existe. Los que empiezan con «OBSOLETA» se ignoran.",
+              "I recognize «YYYY-MM-DD Agenda AI Funnels Weekly.pdf», «YYYY-MM-DD Presentacion AI Funnels Weekly.pdf» and any that say «Minuta». I create the meeting for that date if it doesn't exist. Files starting with «OBSOLETA» are ignored.",
+            )}
           </p>
         </div>
       )}
 
       {meetings.length === 0 ? (
-        <Empty>Todavía no hay reuniones. Subí los PDF de un lunes y se arma sola.</Empty>
+        <Empty>{t("Todavía no hay reuniones. Subí los PDF de un lunes y se arma sola.", "No meetings yet. Upload a Monday's PDFs and it sets itself up.")}</Empty>
       ) : (
         <ul className="card divide-y divide-line">
           {meetings.map((m) => {
             const mf = files.filter((f) => f.meeting_id === m.id);
-            const mt = tasks.filter((t) => t.meeting_id === m.id && !t.parent_id);
+            const mt = tasks.filter((task) => task.meeting_id === m.id && !task.parent_id);
             const project = projects.find((p) => p.id === m.project_id);
             return (
               <li key={m.id}>
@@ -77,21 +80,21 @@ export default function ReunionesPage() {
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium">{longDate(m.date)}</div>
                     <div className="flex flex-wrap items-center gap-x-3 text-xs text-muted">
-                      <span>{m.title || "Reunión"}</span>
+                      <span>{m.title || t("Reunión", "Meeting")}</span>
                       {project && (
                         <span className="inline-flex items-center gap-1">
                           <ProjectDot color={project.color} />
                           {project.name}
                         </span>
                       )}
-                      {mt.length > 0 && <span>{mt.length} tareas</span>}
+                      {mt.length > 0 && <span>{t(`${mt.length} tareas`, `${mt.length} tasks`)}</span>}
                     </div>
                   </div>
                   <AttendeeFaces meetingId={m.id} />
                   <div className="flex gap-1.5 text-muted">
-                    {mf.some((f) => f.role === "agenda") && <FileText className="size-4" aria-label="Agenda" />}
-                    {mf.some((f) => f.role === "presentation") && <Presentation className="size-4" aria-label="Presentación" />}
-                    {mf.some((f) => f.role === "minutes") && <ScrollText className="size-4" aria-label="Minuta" />}
+                    {mf.some((f) => f.role === "agenda") && <FileText className="size-4" aria-label={t("Agenda", "Agenda")} />}
+                    {mf.some((f) => f.role === "presentation") && <Presentation className="size-4" aria-label={t("Presentación", "Presentation")} />}
+                    {mf.some((f) => f.role === "minutes") && <ScrollText className="size-4" aria-label={t("Minuta", "Minutes")} />}
                   </div>
                   <ChevronRight className="size-4 text-muted" />
                 </Link>

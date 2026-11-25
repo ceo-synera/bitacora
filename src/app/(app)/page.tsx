@@ -10,8 +10,10 @@ import { Empty, Section } from "@/components/ui";
 import { openTask } from "@/components/open-task";
 import { FileOpenButton } from "@/components/file-open";
 import type { Task } from "@/lib/types";
+import { getLang, t } from "@/lib/i18n";
+import { shown } from "@/lib/translation";
 
-const open = (t: Task) => !t.parent_id && t.status !== "done" && t.status !== "inbox";
+const open = (task: Task) => !task.parent_id && task.status !== "done" && task.status !== "inbox";
 const byTime = (a: Task, b: Task) => (a.due_time ?? "99").localeCompare(b.due_time ?? "99") || a.sort - b.sort;
 
 export default function HoyPage() {
@@ -20,24 +22,24 @@ export default function HoyPage() {
   const d = today();
   const tomorrow = addDaysISO(d, 1);
 
-  const overdue = tasks.filter((t) => open(t) && t.due_date && t.due_date < d && !t.assignee_id).sort((a, b) => a.due_date!.localeCompare(b.due_date!));
-  const todays = tasks.filter((t) => open(t) && t.due_date === d && !t.assignee_id && t.status !== "waiting").sort(byTime);
-  const waiting = tasks.filter((t) => open(t) && (t.status === "waiting" || t.assignee_id));
-  const agenda = tasks.filter((t) => !t.parent_id && t.status !== "done" && t.due_time && (t.due_date === d || t.due_date === tomorrow)).sort((a, b) => (a.due_date! + a.due_time!).localeCompare(b.due_date! + b.due_time!));
-  const doneToday = tasks.filter((t) => !t.parent_id && t.status === "done" && t.done_at && t.done_at.slice(0, 10) >= d).length;
+  const overdue = tasks.filter((task) => open(task) && task.due_date && task.due_date < d && !task.assignee_id).sort((a, b) => a.due_date!.localeCompare(b.due_date!));
+  const todays = tasks.filter((task) => open(task) && task.due_date === d && !task.assignee_id && task.status !== "waiting").sort(byTime);
+  const waiting = tasks.filter((task) => open(task) && (task.status === "waiting" || task.assignee_id));
+  const agenda = tasks.filter((task) => !task.parent_id && task.status !== "done" && task.due_time && (task.due_date === d || task.due_date === tomorrow)).sort((a, b) => (a.due_date! + a.due_time!).localeCompare(b.due_date! + b.due_time!));
+  const doneToday = tasks.filter((task) => !task.parent_id && task.status === "done" && task.done_at && task.done_at.slice(0, 10) >= d).length;
 
   const waitingByPerson = new Map<string, Task[]>();
-  for (const t of waiting) {
+  for (const task of waiting) {
     // Sin responsable = tuya: la marcaste "Esperando" porque dependés de otro.
-    const k = people.find((p) => p.id === t.assignee_id)?.name ?? "Yo (esperando respuesta)";
-    waitingByPerson.set(k, [...(waitingByPerson.get(k) ?? []), t]);
+    const k = people.find((p) => p.id === task.assignee_id)?.name ?? t("Yo (esperando respuesta)", "Me (awaiting reply)");
+    waitingByPerson.set(k, [...(waitingByPerson.get(k) ?? []), task]);
   }
 
   return (
     <div>
       <div className="mb-5">
         <p className="text-sm text-muted">{longDate(d)}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Hoy</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("Hoy", "Today")}</h1>
       </div>
 
       {isMonday(d) && <MondayCard date={d} />}
@@ -45,19 +47,19 @@ export default function HoyPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div>
           {overdue.length > 0 && (
-            <Section title="Vencidas" count={overdue.length}>
+            <Section title={t("Vencidas", "Overdue")} count={overdue.length}>
               <TaskList tasks={overdue} />
             </Section>
           )}
-          <Section title="Para hoy" count={todays.length}>
-            {todays.length ? <TaskList tasks={todays} showDate={false} /> : <Empty>Nada para hoy{doneToday ? ` · ya completaste ${doneToday}` : ""}.</Empty>}
+          <Section title={t("Para hoy", "Due today")} count={todays.length}>
+            {todays.length ? <TaskList tasks={todays} showDate={false} /> : <Empty>{t("Nada para hoy", "Nothing for today")}{doneToday ? t(` · ya completaste ${doneToday}`, ` · ${doneToday} done already`) : ""}.</Empty>}
             <div className="mt-2">
-              <QuickAdd defaults={{ due_date: d }} placeholder="Agregar para hoy" />
+              <QuickAdd defaults={{ due_date: d }} placeholder={t("Agregar para hoy", "Add for today")} />
             </div>
           </Section>
-          <Section title="Esperando de otros" count={waiting.length}>
+          <Section title={t("Esperando de otros", "Waiting on others")} count={waiting.length}>
             {waiting.length === 0 ? (
-              <Empty>No estás esperando nada de nadie.</Empty>
+              <Empty>{t("No estás esperando nada de nadie.", "You're not waiting on anyone.")}</Empty>
             ) : (
               [...waitingByPerson.entries()].map(([name, ts]) => (
                 <div key={name} className="mb-3">
@@ -70,22 +72,22 @@ export default function HoyPage() {
         </div>
 
         <aside>
-          <Section title="Con hora · hoy y mañana">
+          <Section title={t("Con hora · hoy y mañana", "Timed · today and tomorrow")}>
             {agenda.length === 0 ? (
-              <Empty>Sin tareas con hora.</Empty>
+              <Empty>{t("Sin tareas con hora.", "No timed tasks.")}</Empty>
             ) : (
               <ol className="card divide-y divide-line">
-                {agenda.map((t) => (
-                  <li key={t.id}>
-                    <button onClick={() => openTask(t.id)} className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-soft">
+                {agenda.map((task) => (
+                  <li key={task.id}>
+                    <button onClick={() => openTask(task.id)} className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-soft">
                       <span className="w-14 shrink-0 text-xs text-muted">
-                        {t.due_date === tomorrow ? "mañana" : ""}
+                        {task.due_date === tomorrow ? t("mañana", "tomorrow") : ""}
                         <span className="flex items-center gap-1 font-medium text-ink">
                           <Clock className="size-3" />
-                          {shortTime(t.due_time)}
+                          {shortTime(task.due_time)}
                         </span>
                       </span>
-                      <span className="text-sm">{t.title}</span>
+                      <span className="text-sm">{shown(task, getLang()).title}</span>
                     </button>
                   </li>
                 ))}
@@ -109,19 +111,19 @@ function MondayCard({ date }: { date: string }) {
   return (
     <div className="card mb-6 flex flex-wrap items-center gap-3 border-accent/40 p-4">
       <div className="mr-auto">
-        <div className="text-xs font-semibold uppercase tracking-wide text-accent">Reunión de hoy</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-accent">{t("Reunión de hoy", "Today's meeting")}</div>
         <div className="font-medium">{meeting?.title || "AI Funnels Weekly"}</div>
       </div>
-      {agenda && <FileOpenButton file={agenda} icon={<FileText className="size-4" />} label="Agenda" />}
-      {pres && <FileOpenButton file={pres} icon={<Presentation className="size-4" />} label="Presentación" primary />}
+      {agenda && <FileOpenButton file={agenda} icon={<FileText className="size-4" />} label={t("Agenda", "Agenda")} />}
+      {pres && <FileOpenButton file={pres} icon={<Presentation className="size-4" />} label={t("Presentación", "Presentation")} primary />}
       {(!agenda || !pres) && (
         <Link href={meeting ? `/reuniones/${meeting.id}` : "/reuniones?subir=1"} className="btn-outline">
-          <Upload className="size-4" /> Subir {!agenda && !pres ? "agenda y presentación" : !agenda ? "agenda" : "presentación"}
+          <Upload className="size-4" /> {!agenda && !pres ? t("Subir agenda y presentación", "Upload agenda and presentation") : !agenda ? t("Subir agenda", "Upload agenda") : t("Subir presentación", "Upload presentation")}
         </Link>
       )}
       {meeting && (
         <Link href={`/reuniones/${meeting.id}`} className="btn-ghost">
-          Abrir reunión
+          {t("Abrir reunión", "Open meeting")}
         </Link>
       )}
     </div>

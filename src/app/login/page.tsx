@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Logo } from "@/components/logo";
+import { t } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,13 +20,13 @@ export default function LoginPage() {
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (error) setError(error.message === "Invalid login credentials" ? "Mail o contraseña incorrectos." : error.message);
+    if (error) setError(error.message === "Invalid login credentials" ? t("Mail o contraseña incorrectos.", "Wrong email or password.") : error.message);
     else router.replace("/");
   }
 
   async function onForgot() {
     if (!email.trim()) {
-      setError("Escribí tu mail y tocá de nuevo.");
+      setError(t("Escribí tu mail y tocá de nuevo.", "Enter your email and tap again."));
       return;
     }
     setBusy(true);
@@ -35,7 +36,7 @@ export default function LoginPage() {
     });
     setBusy(false);
     if (error) setError(error.message);
-    else setInfo("Te mandé un mail con un link para elegir una contraseña nueva.");
+    else setInfo(t("Te mandé un mail con un link para elegir una contraseña nueva.", "I sent you an email with a link to choose a new password."));
   }
 
   return (
@@ -46,7 +47,7 @@ export default function LoginPage() {
           <h1 className="text-xl font-semibold">Bitácora</h1>
         </div>
         <label className="block space-y-1">
-          <span className="text-sm text-muted">Mail</span>
+          <span className="text-sm text-muted">{t("Mail", "Email")}</span>
           <input
             className="input"
             type="email"
@@ -57,7 +58,7 @@ export default function LoginPage() {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-sm text-muted">Contraseña</span>
+          <span className="text-sm text-muted">{t("Contraseña", "Password")}</span>
           <input
             className="input"
             type="password"
@@ -70,10 +71,10 @@ export default function LoginPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
         {info && <p className="text-sm text-muted">{info}</p>}
         <button className="btn-primary w-full" disabled={busy}>
-          Entrar
+          {t("Entrar", "Sign in")}
         </button>
         <button type="button" className="w-full text-center text-sm text-muted hover:text-ink" onClick={onForgot}>
-          Olvidé mi contraseña
+          {t("Olvidé mi contraseña", "Forgot my password")}
         </button>
       </form>
     </main>
