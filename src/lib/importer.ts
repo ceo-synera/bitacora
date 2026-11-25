@@ -137,3 +137,78 @@ export function findByName<T extends { name: string }>(items: T[], name: string)
     items.find((i) => n.split(/\s+/)[0] === norm(i.name).split(/\s+/)[0] && n.length > 0)
   );
 }
+
+/** Nombres que en una planilla quieren decir "yo" (el dueño de la app). */
+export const MY_NAMES = ["yo", "me", "mi", "nicolas", "nicolás", "nahuel", "nico"];
+
+export function isMe(name: string | null): boolean {
+  return !!name && MY_NAMES.includes(norm(name));
+}
+
+// Palabras vacías en español e inglés: no cuentan para comparar títulos.
+const STOP = new Set(
+  "para with from that this they them their there have will como entre sobre desde hasta cuando donde quien todos todas antes despues primer primera first after before about into the and los las del una uno unos unas con por que mas".split(
+    " ",
+  ),
+);
+
+// Raíces en inglés -> raíz en español, para reconocer la misma tarea escrita en el otro idioma.
+const EN_ES: Record<string, string> = {
+  revie: "revis", piece: "pieza", first: "prime", cours: "curso", teach: "curso", date: "fecha", send: "manda",
+  load: "carga", uploa: "carga", accou: "cuent", socia: "redes", repor: "infor", weekl: "seman",
+  decid: "decid", defin: "decid", appro: "aprob", team: "equip", spani: "espan", engli: "ingle", video: "video",
+  scrip: "guion", book: "libro", title: "titul", music: "music", brand: "marca", landi: "landi", page: "pagin",
+  secre: "secre", key: "clave", produ: "produ", integ: "integ", meeti: "reuni", call: "llama", recor: "graba",
+  photo: "fotos", pictu: "fotos", whats: "whats", numbe: "numer", struc: "estru", conte: "conte", month: "mes",
+  quest: "pregu", produc: "produ", sheet: "ficha", minut: "minut", agend: "agend", prese: "prese", websi: "sitio",
+  site: "sitio", link: "link", task: "tarea", tasks: "tarea", assig: "asign", roles: "rol", acces: "alta", setup: "confi", confi: "confi", rotat: "rotar", rota: "rotar",
+};
+
+/** Raíces de las palabras importantes de un título (5 letras: "callback" y "callbacks" coinciden; también "secret"/"secreta"). */
+export function keyStems(title: string): Set<string> {
+  return new Set(
+    norm(title)
+    .replace(/[^a-z0-9ñ ]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 4 && !STOP.has(w))
+      .map((w) => w.slice(0, 5))
+      .map((w) => EN_ES[w] ?? w),
+  );
+}
+
+export type ExistingTask = { id: string; title: string; assignee: string | null; due_date: string | null; done: boolean };
+export type Duplicate = { kind: "igual" | "parecida"; title: string };
+
+/**
+ * ¿La tarea importada ya existe?
+ * - "igual": mismo título (sin mayúsculas ni tildes).
+ * - "parecida": mismo responsable y al menos una palabra clave en común (sin contar nombres de personas).
+ *   Así se detecta la misma tarea escrita en otro idioma. Si hay varias, gana la de la misma fecha.
+ * `names`: nombres de personas, para no tomarlos como palabras clave.
+ */
+export function findDuplicate(t: ImportedTask, existing: ExistingTask[], names: string[] = []): Duplicate | null {
+  const title = norm(t.title);
+  const same = existing.find((e) => norm(e.title) === title);
+  if (same) return { kind: "igual", title: same.title };
+
+  const nameStems = new Set(
+    [...names, ...MY_NAMES, ...existing.map((e) => e.assignee ?? ""), t.assignee ?? ""]
+      .flatMap((n) => norm(n).split(/\s+/))
+      .filter((w) => w.length >= 4)
+      .map((w) => w.slice(0, 5)),
+  );
+  const stems = (s: string) => new Set([...keyStems(s)].filter((w) => !nameStems.has(w)));
+  const mine = stems(t.title);
+  const who = isMe(t.assignee) || !t.assignee ? null : norm(t.assignee).split(" ")[0];
+
+  let best: { e: ExistingTask; score: number } | null = null;
+  for (const e of existing) {
+    const eWho = e.assignee ? norm(e.assignee).split(" ")[0] : null;
+    if (eWho !== who) continue;
+    const shared = [...stems(e.title)].filter((w) => mine.has(w)).length;
+    if (shared === 0) continue;
+    const score = shared + (t.due_date && t.due_date === e.due_date ? 2 : 0);
+    if (!best || score > best.score) best = { e, score };
+  }
+  return best ? { kind: "parecida", title: best.e.title } : null;
+}

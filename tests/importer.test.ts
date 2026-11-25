@@ -60,3 +60,56 @@ describe("importador de planillas", () => {
     expect(findByName(people, "Judith")).toBeUndefined();
   });
 });
+
+import { findDuplicate, isMe, type ExistingTask } from "@/lib/importer";
+
+describe("duplicados al importar", () => {
+  const existing: ExistingTask[] = [
+    { id: "1", title: "Rotar la clave secreta de los callbacks de Darkroom", assignee: "Alex", due_date: null, done: false },
+    { id: "2", title: "Integraciones con Circle, Stripe y Telegram", assignee: "Kevin", due_date: null, done: false },
+    { id: "3", title: "Revisar las primeras piezas de Kevin", assignee: null, due_date: "2026-11-26", done: false },
+    { id: "4", title: "Dar de alta a Akash como Operator", assignee: "Kevin", due_date: null, done: false },
+    { id: "5", title: "Cargar los 2 libros con «chingao»", assignee: "Kevin", due_date: "2026-11-26", done: false },
+  ];
+  const t = (title: string, assignee: string | null, due_date: string | null = null) => ({
+    title,
+    assignee,
+    due_date,
+    status: "todo" as const,
+    priority: "normal" as const,
+    notes: "",
+    project: null,
+  });
+
+  it("mismo título, sin importar mayúsculas ni tildes", () => {
+    expect(findDuplicate(t("dar de alta a akash como operator", "Kevin"), existing)?.kind).toBe("igual");
+  });
+  it("la misma tarea en inglés", () => {
+    expect(findDuplicate(t("Rotate the Darkroom callback secret", "Alex"), existing)?.title).toMatch(/Darkroom/);
+    expect(findDuplicate(t("Integrations: Circle, Stripe, Telegram", "Kevin"), existing)?.title).toMatch(/Circle/);
+    expect(findDuplicate(t("Give Akash access as Operator", "Kevin"), existing)?.title).toMatch(/Akash/);
+    expect(findDuplicate(t('Load the 2 "chingao" books with their original titles', "Kevin", "2026-11-26"), existing)?.title).toMatch(/chingao/);
+    expect(findDuplicate(t("Review Kevin's first pieces before they go to Elsa", "Nicolás", "2026-11-26"), existing)?.title).toMatch(/piezas/);
+  });
+  it("no confunde tareas distintas", () => {
+    expect(findDuplicate(t("Approve the brand music", "Alex", "2026-11-27"), existing)).toBeNull();
+    expect(findDuplicate(t("Definir rol y tareas de Akash", "Akash"), existing)).toBeNull();
+    expect(findDuplicate(t("Rotate the Darkroom callback secret", "Kevin"), existing)).toBeNull(); // otro responsable
+    // Caso real (25/11): no la confunde con "Mandar los mensajes a Kevin, Alex, Elsa…" por los nombres.
+    const mine = [...existing, { id: "6", title: "Mandar los mensajes a Kevin, Alex, Elsa, Ricardo y Judith", assignee: null, due_date: "2026-11-24", done: true }];
+    expect(findDuplicate(t("Forward Elsa's product batches to Kevin", "Nicolás", "2026-11-25"), mine, ["Kevin", "Elsa", "Alex"])).toBeNull();
+  });
+  it("Nicolás / yo / me son el dueño de la app", () => {
+    expect(isMe("Nicolás")).toBe(true);
+    expect(isMe("yo")).toBe(true);
+    expect(isMe("Kevin")).toBe(false);
+  });
+});
+
+describe("duplicados: tareas en inglés contra las de la app", () => {
+  it("«Role and tasks to be assigned» = «Definir rol y tareas de Akash»", () => {
+    const ex: ExistingTask[] = [{ id: "1", title: "Definir rol y tareas de Akash", assignee: "Akash", due_date: null, done: false }];
+    const d = findDuplicate({ title: "Role and tasks to be assigned", assignee: "Akash", due_date: null, status: "todo", priority: "normal", notes: "", project: null }, ex, ["Akash"]);
+    expect(d?.title).toBe("Definir rol y tareas de Akash");
+  });
+});
