@@ -4,7 +4,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { useEffect } from "react";
 import { persister, queryClient } from "@/lib/db";
 import { Toaster } from "./toaster";
-import { useLang } from "@/lib/i18n";
+import { useLang } from "@/lib/use-lang";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const lang = useLang();

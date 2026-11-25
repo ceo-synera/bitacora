@@ -1,6 +1,7 @@
 "use client";
 
-import { setLang, useLang } from "@/lib/i18n";
+import { setLang } from "@/lib/i18n";
+import { useLang } from "@/lib/use-lang";
 
 /** Botón ES / EN para cambiar el idioma de la interfaz. */
 export function LangToggle({ className = "" }: { className?: string }) {

@@ -1,5 +1,4 @@
 
-import { useSyncExternalStore } from "react";
 
 /*
  * Idioma de la interfaz (español / inglés).
@@ -34,15 +33,12 @@ export function setLang(l: Lang) {
   ls.forEach((f) => f());
 }
 
-export function useLang(): Lang {
-  return useSyncExternalStore(
-    (cb) => {
-      ls.add(cb);
-      return () => ls.delete(cb);
-    },
-    () => lang,
-    () => "es",
-  );
+/** Para suscribirse a cambios de idioma (lo usa el hook useLang de "./use-lang"). */
+export function subscribeLang(cb: () => void) {
+  ls.add(cb);
+  return () => {
+    ls.delete(cb);
+  };
 }
 
 /** Texto según el idioma de la interfaz. */

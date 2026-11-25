@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { mergeLocal, useTasks } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
-import { useLang } from "@/lib/i18n";
+import { useLang } from "@/lib/use-lang";
 import { needsTranslation } from "@/lib/translation";
 
 /**
