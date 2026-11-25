@@ -9,7 +9,8 @@ export type Lang = "es" | "en";
 const KEY = "bitacora-lang";
 const ls = new Set<() => void>();
 
-function initial(): Lang {
+/** Idioma guardado en el dispositivo (o el del navegador). Se aplica después de montar la app, para no chocar con el HTML del servidor. */
+export function savedLang(): Lang {
   if (typeof window === "undefined") return "es";
   try {
     const v = localStorage.getItem(KEY);
@@ -18,7 +19,7 @@ function initial(): Lang {
   return navigator.language?.toLowerCase().startsWith("en") ? "en" : "es";
 }
 
-let lang: Lang = initial();
+let lang: Lang = "es";
 
 export function getLang(): Lang {
   return lang;

@@ -5,9 +5,15 @@ import { useEffect } from "react";
 import { persister, queryClient } from "@/lib/db";
 import { Toaster } from "./toaster";
 import { useLang } from "@/lib/use-lang";
+import { savedLang, setLang } from "@/lib/i18n";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const lang = useLang();
+  useEffect(() => {
+    const l = savedLang();
+    if (l !== "es") setLang(l);
+  }, []);
+
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => {});
