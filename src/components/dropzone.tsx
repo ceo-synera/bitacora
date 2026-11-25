@@ -2,12 +2,13 @@
 
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
+import { t } from "@/lib/i18n";
 
 /** Zona para soltar o elegir archivos. */
 export function FileDrop({
   onFiles,
   accept,
-  label = "Soltá archivos acá o tocá para elegir",
+  label = t("Soltá archivos acá o tocá para elegir", "Drop files here or tap to choose"),
   busy = false,
   compact = false,
 }: {
@@ -42,7 +43,7 @@ export function FileDrop({
       } ${compact ? "px-3 py-3" : "px-4 py-8"}`}
     >
       <Upload className="size-4" />
-      {busy ? "Subiendo…" : label}
+      {busy ? t("Subiendo…", "Uploading…") : label}
       <input
         ref={input}
         type="file"

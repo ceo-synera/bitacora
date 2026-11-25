@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { t } from "@/lib/i18n";
 
 export function Dialog({
   open,
@@ -36,7 +37,7 @@ export function Dialog({
         <div className="flex max-h-[92dvh] flex-col">
           <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
             <div className="min-w-0 flex-1 font-semibold">{title}</div>
-            <button className="btn-ghost p-1.5" onClick={onClose} aria-label="Cerrar">
+            <button className="btn-ghost p-1.5" onClick={onClose} aria-label={t("Cerrar", "Close")}>
               <X className="size-5" />
             </button>
           </div>

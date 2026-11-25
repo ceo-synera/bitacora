@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useFiles } from "@/lib/db";
 import { addLink, deleteFile, linkName, normalizeUrl, uploadFile } from "@/lib/files";
 import { toast } from "@/lib/toast";
+import { t } from "@/lib/i18n";
 
 /** Links y archivos de una tarea (o de lo que se pase en `meta`). Pegás un link y Enter. */
 export function Attachments({ meta, filter, limit }: { limit?: number; meta: { task_id?: string; project_id?: string | null; meeting_id?: string | null }; filter: (f: { task_id: string | null; meeting_id: string | null; project_id: string | null }) => boolean }) {
@@ -34,7 +35,7 @@ export function Attachments({ meta, filter, limit }: { limit?: number; meta: { t
                 </Link>
               )}
               {f.kind === "link" && <ExternalLink className="size-3.5 text-muted" />}
-              <button className="p-1 text-muted opacity-60 hover:text-danger hover:opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => deleteFile(f)} aria-label="Quitar">
+              <button className="p-1 text-muted opacity-60 hover:text-danger hover:opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => deleteFile(f)} aria-label={t("Quitar", "Remove")}>
                 <X className="size-4" />
               </button>
             </li>
@@ -43,7 +44,7 @@ export function Attachments({ meta, filter, limit }: { limit?: number; meta: { t
       )}
       {limit && all.length > limit && (
         <button className="mb-2 px-2 text-sm text-muted hover:text-ink" onClick={() => setShowAll(!showAll)}>
-          {showAll ? "Ver menos" : `Ver los ${all.length}`}
+          {showAll ? t("Ver menos", "Show less") : t(`Ver los ${all.length}`, `Show all ${all.length}`)}
         </button>
       )}
       <form
@@ -51,13 +52,13 @@ export function Attachments({ meta, filter, limit }: { limit?: number; meta: { t
         onSubmit={(e) => {
           e.preventDefault();
           const url = normalizeUrl(v);
-          if (!url) return toast("Eso no parece un link.", "error");
+          if (!url) return toast(t("Eso no parece un link.", "That doesn't look like a link."), "error");
           addLink(url, linkName(url), meta);
           setV("");
         }}
       >
-        <input className="input py-1.5 text-sm" placeholder="Pegá un link y Enter (Drive, Sheets, Claude, web…)" value={v} onChange={(e) => setV(e.target.value)} inputMode="url" />
-        <button type="button" className="btn-outline shrink-0 px-2.5 py-1.5" onClick={() => input.current?.click()} disabled={busy} aria-label="Adjuntar archivo" title="Adjuntar archivo">
+        <input className="input py-1.5 text-sm" placeholder={t("Pegá un link y Enter (Drive, Sheets, Claude, web…)", "Paste a link and press Enter (Drive, Sheets, Claude, web…)")} value={v} onChange={(e) => setV(e.target.value)} inputMode="url" />
+        <button type="button" className="btn-outline shrink-0 px-2.5 py-1.5" onClick={() => input.current?.click()} disabled={busy} aria-label={t("Adjuntar archivo", "Attach file")} title={t("Adjuntar archivo", "Attach file")}>
           <Paperclip className="size-4" />
         </button>
         <input

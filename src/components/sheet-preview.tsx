@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { readSheet, type Workbook } from "@/lib/sheets";
+import { t } from "@/lib/i18n";
 import { Tabs } from "./ui";
 
 /** Vista de una planilla (xlsx, xls o csv) en el navegador, con pestañas. */
@@ -21,8 +22,8 @@ export function SheetPreview({ url, name }: { url: string; name: string }) {
       .catch((e) => setError(String(e.message ?? e)));
   }, [url, name]);
 
-  if (error) return <p className="p-4 text-sm text-danger">No pude leer la planilla: {error}</p>;
-  if (!wb) return <p className="p-4 text-sm text-muted">Leyendo planilla…</p>;
+  if (error) return <p className="p-4 text-sm text-danger">{t("No pude leer la planilla:", "Couldn't read the spreadsheet:")} {error}</p>;
+  if (!wb) return <p className="p-4 text-sm text-muted">{t("Leyendo planilla…", "Reading spreadsheet…")}</p>;
   const rows = wb.sheets[sheet] ?? [];
   const width = Math.max(0, ...rows.map((r) => r.length));
 
@@ -58,7 +59,7 @@ export function SheetPreview({ url, name }: { url: string; name: string }) {
             ))}
           </tbody>
         </table>
-        {rows.length > 2000 && <p className="p-2 text-xs text-muted">Mostrando las primeras 2000 filas de {rows.length}.</p>}
+        {rows.length > 2000 && <p className="p-2 text-xs text-muted">{t(`Mostrando las primeras 2000 filas de ${rows.length}.`, `Showing the first 2000 rows of ${rows.length}.`)}</p>}
       </div>
     </div>
   );

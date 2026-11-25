@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/db";
+import { t } from "@/lib/i18n";
 
 const SessionContext = createContext<Session | null>(null);
 export const useSession = () => useContext(SessionContext);
@@ -28,7 +29,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [session, router]);
 
   if (!session) {
-    return <div className="flex min-h-dvh items-center justify-center text-sm text-muted">Cargando…</div>;
+    return <div className="flex min-h-dvh items-center justify-center text-sm text-muted">{t("Cargando…", "Loading…")}</div>;
   }
   return <SessionContext value={session}>{children}</SessionContext>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMembers, usePeople, useProjects } from "@/lib/db";
+import { t } from "@/lib/i18n";
 import { openCreate } from "./create-store";
 
 const NEW = "__nuevo__";
@@ -9,7 +10,7 @@ export function ProjectSelect({
   value,
   onChange,
   includeArchived = false,
-  emptyLabel = "Sin proyecto",
+  emptyLabel = t("Sin proyecto", "No project"),
   className = "input",
   allowCreate = false,
 }: {
@@ -38,7 +39,7 @@ export function ProjectSelect({
             {p.name}
           </option>
         ))}
-      {allowCreate && <option value={NEW}>+ Nuevo proyecto…</option>}
+      {allowCreate && <option value={NEW}>{t("+ Nuevo proyecto…", "+ New project…")}</option>}
     </select>
   );
 }
@@ -47,7 +48,7 @@ export function ProjectSelect({
 export function PersonSelect({
   value,
   onChange,
-  emptyLabel = "Yo",
+  emptyLabel = t("Yo", "Me"),
   className = "input",
   allowCreate = false,
   projectId = null,
@@ -83,13 +84,13 @@ export function PersonSelect({
       <option value="">{emptyLabel}</option>
       {team.length > 0 ? (
         <>
-          <optgroup label="Equipo del proyecto">{team.map(opt)}</optgroup>
-          {others.length > 0 && <optgroup label="Otras personas">{others.map(opt)}</optgroup>}
+          <optgroup label={t("Equipo del proyecto", "Project team")}>{team.map(opt)}</optgroup>
+          {others.length > 0 && <optgroup label={t("Otras personas", "Other people")}>{others.map(opt)}</optgroup>}
         </>
       ) : (
         people.map(opt)
       )}
-      {allowCreate && <option value={NEW}>+ Nueva persona…</option>}
+      {allowCreate && <option value={NEW}>{t("+ Nueva persona…", "+ New person…")}</option>}
     </select>
   );
 }

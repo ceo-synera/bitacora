@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Pin, Plus } from "lucide-react";
 import { insert, useNotes, useProjects } from "@/lib/db";
 import { humanDate } from "@/lib/dates";
+import { t } from "@/lib/i18n";
 import { Empty } from "./ui";
 import { ProjectDot } from "./pickers";
 
@@ -25,7 +26,7 @@ export function NotesList({ projectId }: { projectId?: string }) {
   return (
     <div>
       <div className="mb-4 flex gap-2">
-        <input className="input" placeholder="Buscar en las notas" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder={t("Buscar en las notas", "Search notes")} value={q} onChange={(e) => setQ(e.target.value)} />
         <button
           className="btn-primary shrink-0"
           onClick={() => {
@@ -33,11 +34,11 @@ export function NotesList({ projectId }: { projectId?: string }) {
             router.push(`/notas/${n.id}`);
           }}
         >
-          <Plus className="size-4" /> Nota
+          <Plus className="size-4" /> {t("Nota", "Note")}
         </button>
       </div>
       {shown.length === 0 ? (
-        <Empty>{q ? "Nada coincide." : "Sin notas todavía."}</Empty>
+        <Empty>{q ? t("Nada coincide.", "Nothing matches.") : t("Sin notas todavía.", "No notes yet.")}</Empty>
       ) : (
         <ul className="grid gap-2 md:grid-cols-2">
           {shown.map((n) => {
@@ -47,7 +48,7 @@ export function NotesList({ projectId }: { projectId?: string }) {
                 <Link href={`/notas/${n.id}`} className="card block h-full p-3 hover:border-muted">
                   <div className="flex items-center gap-1.5 text-sm font-medium">
                     {n.pinned && <Pin className="size-3.5 text-accent" />}
-                    <span className="truncate">{n.title || "Sin título"}</span>
+                    <span className="truncate">{n.title || t("Sin título", "Untitled")}</span>
                   </div>
                   <p className="mt-1 line-clamp-3 text-xs text-muted">{n.body_md.replace(/[#*_>`\-\[\]]/g, "").slice(0, 240)}</p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-muted">

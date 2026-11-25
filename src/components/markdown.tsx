@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { t } from "@/lib/i18n";
 
 export function Markdown({ children }: { children: string }) {
   return (
@@ -42,7 +43,7 @@ export function MarkdownField({
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => value && setEditing(false)}
         />
-        <p className="mt-1 text-xs text-muted">Markdown: **negrita**, - listas, [ ] checklist, [texto](link)</p>
+        <p className="mt-1 text-xs text-muted">{t("Markdown: **negrita**, - listas, [ ] checklist, [texto](link)", "Markdown: **bold**, - lists, [ ] checklist, [text](link)")}</p>
       </div>
     );
   }

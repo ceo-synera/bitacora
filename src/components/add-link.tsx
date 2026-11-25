@@ -3,6 +3,7 @@
 import { Link2 } from "lucide-react";
 import { useState } from "react";
 import { addLink } from "@/lib/files";
+import { t } from "@/lib/i18n";
 import { Dialog } from "./ui";
 import { ProjectSelect } from "./pickers";
 
@@ -17,7 +18,7 @@ export function AddLinkButton({ meta = {}, defaultOpen = false }: { meta?: { pro
       <button className="btn-outline" onClick={() => setOpen(true)}>
         <Link2 className="size-4" /> Link
       </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Guardar un link">
+      <Dialog open={open} onClose={() => setOpen(false)} title={t("Guardar un link", "Save a link")}>
         <form
           className="space-y-3"
           onSubmit={(e) => {
@@ -32,10 +33,10 @@ export function AddLinkButton({ meta = {}, defaultOpen = false }: { meta?: { pro
           }}
         >
           <input className="input" type="url" inputMode="url" placeholder="https://docs.google.com/…" value={url} onChange={(e) => setUrl(e.target.value)} autoFocus required />
-          <input className="input" placeholder="Nombre (opcional)" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" placeholder={t("Nombre (opcional)", "Name (optional)")} value={name} onChange={(e) => setName(e.target.value)} />
           {!meta.meeting_id && <ProjectSelect value={project} onChange={setProject} allowCreate />}
-          <p className="text-xs text-muted">Links de Drive, Google Sheets o artefactos de Claude se abren en una pestaña nueva; no se copia el contenido.</p>
-          <button className="btn-primary w-full">Guardar</button>
+          <p className="text-xs text-muted">{t("Links de Drive, Google Sheets o artefactos de Claude se abren en una pestaña nueva; no se copia el contenido.", "Drive, Google Sheets or Claude artifact links open in a new tab; the content isn't copied.")}</p>
+          <button className="btn-primary w-full">{t("Guardar", "Save")}</button>
         </form>
       </Dialog>
     </>

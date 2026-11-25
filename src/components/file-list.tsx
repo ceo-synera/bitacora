@@ -6,6 +6,7 @@ import { useProjects } from "@/lib/db";
 import { deleteFile, fileKind, formatSize } from "@/lib/files";
 import { ROLE_LABEL } from "@/lib/meeting-pdf";
 import { humanDate } from "@/lib/dates";
+import { t } from "@/lib/i18n";
 import type { FileRow } from "@/lib/types";
 import { ProjectDot } from "./pickers";
 
@@ -38,8 +39,8 @@ export function FileList({ files, showProject = true }: { files: FileRow[]; show
             {f.kind === "link" && <ExternalLink className="size-4 text-muted" />}
             <button
               className="p-1.5 text-muted opacity-60 hover:text-danger hover:opacity-100 md:opacity-0 md:group-hover:opacity-100"
-              onClick={() => confirm(`¿Borrar "${f.name}"?`) && deleteFile(f)}
-              aria-label="Borrar"
+              onClick={() => confirm(t(`¿Borrar "${f.name}"?`, `Delete "${f.name}"?`)) && deleteFile(f)}
+              aria-label={t("Borrar", "Delete")}
             >
               <Trash2 className="size-4" />
             </button>

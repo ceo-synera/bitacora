@@ -3,13 +3,14 @@
 import { Plus, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { insert } from "@/lib/db";
+import { t } from "@/lib/i18n";
 import type { Task } from "@/lib/types";
 import { newTask } from "./create-store";
 
 /** Agrega una tarea en una línea, con los valores por defecto que le pases (proyecto, fecha, reunión…). */
 export function QuickAdd({
   defaults = {},
-  placeholder = "Nueva tarea",
+  placeholder = t("Nueva tarea", "New task"),
   autoFocus = false,
 }: {
   defaults?: Partial<Task>;
@@ -38,8 +39,8 @@ export function QuickAdd({
       <button
         type="button"
         className="-mr-1 shrink-0 rounded-md p-1.5 text-muted hover:bg-soft hover:text-ink"
-        title="Con todos los detalles"
-        aria-label="Crear con todos los detalles"
+        title={t("Con todos los detalles", "With all the details")}
+        aria-label={t("Crear con todos los detalles", "Create with all the details")}
         onClick={() => {
           newTask({ status: "todo", ...defaults, title: v.trim() });
           setV("");
